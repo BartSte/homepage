@@ -1,17 +1,24 @@
 [project]
 name = "homepage"
-version = "0.1.0"
+dynamic = ["version"]
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115",
+    "fastapi[standard]>=0.115",
     "uvicorn[standard]>=0.34",
     "jinja2>=3.1",
     "python-multipart>=0.0.20",
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/homepage"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
