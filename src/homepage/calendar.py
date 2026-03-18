@@ -1,5 +1,6 @@
 """Fetch and parse calendar events from khal CLI."""
 
+import os
 import re
 import subprocess
 import time
@@ -38,10 +39,11 @@ def get_events(days_ahead: int = 21) -> list[dict]:
     def fetch():
         today = date.today()
         end = today + timedelta(days=days_ahead)
+        khal_bin = os.path.expanduser("~/.local/bin/khal")
         try:
             result = subprocess.run(
                 [
-                    "khal", "list",
+                    khal_bin, "list",
                     _khal_date(today),
                     _khal_date(end),
                     "--format",
