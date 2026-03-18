@@ -2,16 +2,7 @@
 {% block title %}Calendar — Hekkie{% endblock %}
 
 {% block extra_style %}
-  /* Layout: week grid left, upcoming list right */
-  .cal-layout {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 32px;
-    align-items: start;
-  }
-  @media (max-width: 760px) {
-    .cal-layout { grid-template-columns: 1fr; }
-  }
+  .cal-layout { display: block; }
 
   /* Week grid */
   .week-section { margin-bottom: 28px; }
@@ -263,50 +254,6 @@
       {% endfor %}
     </div>
 
-    <!-- UPCOMING SIDEBAR -->
-    <div>
-      <div class="upcoming-card">
-        <div class="upcoming-head">📅 upcoming</div>
-        <div style="max-height:680px;overflow-y:auto;">
-          {% set shown = [] %}
-          {% for day in days %}
-            {% if day.event_count > 0 or day.is_today %}
-              {% if shown | length < 14 %}
-                {% set _ = shown.append(day) %}
-                <div class="upcoming-day">
-                  <div class="upcoming-day-head">
-                    <span class="upcoming-dow">{{ day.dow[:3] }}</span>
-                    <span class="upcoming-date">{{ day.dom }}</span>
-                    <span class="upcoming-month">{{ day.month }}</span>
-                    {% if day.is_today %}
-                    <span class="upcoming-today-badge">today</span>
-                    {% endif %}
-                  </div>
-                  <div class="upcoming-events">
-                    {% if day.events %}
-                      {% for e in day.events %}
-                      <div class="upcoming-event">
-                        <span class="up-dot" style="background:{{ e.dot }};"></span>
-                        {% if e.all_day %}
-                          <span class="up-time" style="color:var(--muted);">all day</span>
-                          <span class="up-title">{{ e.title }}</span>
-                          <span class="up-all-day" style="background:{{ e.bg }};color:{{ e.dot }};">{{ e.label }}</span>
-                        {% else %}
-                          <span class="up-time">{{ e.start }}–{{ e.end }}</span>
-                          <span class="up-title">{{ e.title }}</span>
-                        {% endif %}
-                      </div>
-                      {% endfor %}
-                    {% else %}
-                      <div class="upcoming-empty">free 🎉</div>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endif %}
-            {% endif %}
-          {% endfor %}
-        </div>
-      </div>
-    </div>
+
   </div>
 {% endblock %}
