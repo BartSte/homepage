@@ -147,11 +147,20 @@
     flex-shrink: 0;
   }
 
-  @media (max-width: 600px) {
-    .week-stats { gap: 12px; }
-    .week-stat { min-width: 48px; }
+  @media (max-width: 640px) {
     .week-bar-wrap { display: none; }
-    .act-type, .act-date { display: none; }
+    .week-num { min-width: 40px; font-size: 0.65rem; }
+    .week-month { min-width: 0; flex: 1; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .week-stats { gap: 8px; }
+    .week-stat { min-width: 44px; }
+    .week-stat:last-child { display: none; } /* hide time on mobile */
+    .week-stat .v { font-size: 0.78rem; }
+    .week-stat .l { font-size: 0.6rem; }
+    .act-type, .act-date, .act-dur { display: none; }
+    .act-km { min-width: 48px; font-size: 0.78rem; }
+    .act-name { font-size: 0.82rem; }
+    .week-activities { padding: 12px 12px; }
+    .week-summary { padding: 12px; }
   }
 {% endblock %}
 

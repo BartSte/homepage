@@ -148,6 +148,27 @@
 
   /* Loading state */
   .htmx-request #day-detail { opacity: 0.5; }
+
+  /* Mobile: compact cells — just number + dots */
+  @media (max-width: 640px) {
+    .week-grid { gap: 4px; }
+    .day-cell { padding: 6px 4px; min-height: 54px; border-radius: 7px; }
+    .day-dow { display: none; }
+    .day-num { font-size: 0.88rem; margin-bottom: 4px; text-align: center; }
+    .day-event-chip { display: none; }
+    .day-more { display: none; }
+    .day-events-dots { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+    .event-dot-sm {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .week-label { font-size: 0.65rem; }
+    .detail-event { flex-wrap: wrap; gap: 6px; }
+    .detail-time { min-width: auto; font-size: 0.72rem; }
+  }
+  /* Hide dot view on desktop */
+  .day-events-dots { display: none; }
 {% endblock %}
 
 {% block extra_head %}
@@ -219,6 +240,11 @@
           {% if day.events | length > 3 %}
           <div class="day-more">+{{ day.events | length - 3 }} more</div>
           {% endif %}
+        </div>
+        <div class="day-events-dots">
+          {% for e in day.events[:5] %}
+          <span class="event-dot-sm" style="background:{{ e.dot }};"></span>
+          {% endfor %}
         </div>
       </div>
       {% endfor %}
