@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}Activities — Hekkie{% endblock %}
+
+{% block extra_style %}
+  .week-list { display: flex; flex-direction: column; gap: 12px; }
+
+  details.week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  details.week-card[open] { border-color: var(--accent); }
+  details.week-card[open] .week-summary { border-bottom: 1px solid var(--border); }
+
+  summary.week-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    gap: 0;
+  }
+  summary.week-summary::-webkit-details-marker { display: none; }
+  summary.week-summary:hover { background: rgba(255,255,255,0.02); }
+
+  .week-chevron {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    padding-left: 12px;
+  }
+  details[open] .week-chevron { transform: rotate(180deg); }
+
+  .week-num {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    min-width: 56px;
+    flex-shrink: 0;
+  }
+  .week-month {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+  .week-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0 20px;
+  }
+  .week-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .week-stats {
+    display: flex;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+  .week-stat {
+    text-align: right;
+    min-width: 60px;
+  }
+  .week-stat .v {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+  }
+  .week-stat .l {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .week-activities {
+    padding: 16px 20px;
+  }
+  .activity-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+    font-size: 0.85rem;
+  }
+  .activity-row:last-child { border-bottom: none; }
+  .act-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .act-name {
+    flex: 1;
+    color: var(--text);
+    font-weight: 500;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .act-type {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-width: 110px;
+    flex-shrink: 0;
+  }
+  .act-date {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+  .act-dur {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--text);
+    min-width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .act-km {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent);
+    min-width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    .week-stats { gap: 12px; }
+    .week-stat { min-width: 48px; }
+    .week-bar-wrap { display: none; }
+    .act-type, .act-date { display: none; }
+  }
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <p class="section-label">// training log</p>
+    <h1>Activities {{ data.year }}</h1>
+    <p>Year-to-date · synced from Garmin every 15 minutes</p>
+  </div>
+
+  <!-- YTD STATS -->
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="label">🚴 total km</div>
+      <div class="value">{{ total_km }}</div>
+      <div class="sub">kilometres this year</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">⏱ total time</div>
+      <div class="value">{{ total_time }}</div>
+      <div class="sub">hours in saddle + shoes</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">⚡ intensity</div>
+      <div class="value">{{ total_intensity }}</div>
+      <div class="sub">total intensity minutes</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">📅 weeks</div>
+      <div class="value">{{ data.weeks | length }}</div>
+      <div class="sub">active training weeks</div>
+    </div>
+  </div>
+
+  <!-- WEEKLY SUMMARY TABLE -->
+  <p class="section-label">// weekly breakdown</p>
+  <div class="week-list">
+    {% for week in data.weeks %}
+    {% set intensity_pct = (week.intensity / max_intensity * 100) | int %}
+    {% if week.intensity > 400 %}
+      {% set bar_color = "#c51a8a" %}
+    {% elif week.intensity > 250 %}
+      {% set bar_color = "#7c3aed" %}
+    {% elif week.intensity > 100 %}
+      {% set bar_color = "#3b82f6" %}
+    {% else %}
+      {% set bar_color = "#334155" %}
+    {% endif %}
+
+    <details class="week-card" {% if loop.index == 1 %}open{% endif %}>
+      <summary class="week-summary">
+        <span class="week-num">wk {{ "%02d"|format(week.number) }}</span>
+        <span class="week-month">{{ week.month }}</span>
+        <div class="week-bar-wrap">
+          <div class="week-bar-fill" style="width:{{ intensity_pct }}%; background:{{ bar_color }};"></div>
+        </div>
+        <div class="week-stats">
+          <div class="week-stat">
+            <span class="v">{{ week.total_km | int }}</span>
+            <span class="l">km</span>
+          </div>
+          <div class="week-stat">
+            <span class="v">{{ week.intensity }}</span>
+            <span class="l">int</span>
+          </div>
+          <div class="week-stat">
+            <span class="v">{{ week.total_duration }}</span>
+            <span class="l">time</span>
+          </div>
+        </div>
+        <span class="week-chevron">▾</span>
+      </summary>
+      <div class="week-activities">
+        {% if week.activities %}
+          {% for act in week.activities %}
+          <div class="activity-row">
+            <div class="act-icon" style="background: {{ act.color }}22;">{{ act.icon }}</div>
+            <span class="act-name">{{ act.name }}</span>
+            <span class="act-type">{{ act.type }}</span>
+            <span class="act-date">{{ act.date }}</span>
+            <span class="act-dur">{{ act.duration }}</span>
+            <span class="act-km">{% if act.km %}{{ act.km | int }} km{% else %}—{% endif %}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color:var(--muted); font-size:0.85rem;">No activities recorded.</p>
+        {% endif %}
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+{% endblock %}

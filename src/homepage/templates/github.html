@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}GitHub — Hekkie{% endblock %}
+
+{% block extra_style %}
+  .github-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .github-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Repos */
+  .repo-list { display: flex; flex-direction: column; gap: 10px; }
+  .repo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .repo-card:hover {
+    border-color: var(--accent);
+    transform: translateX(3px);
+  }
+  .repo-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .repo-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--blue);
+    flex: 1;
+  }
+  .repo-time {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .repo-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .repo-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .lang-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .lang-name {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .stars {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Open PRs */
+  .pr-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pr-header {
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pr-count {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.68rem;
+    margin-left: auto;
+  }
+  .pr-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,42,64,.5);
+    text-decoration: none;
+    display: block;
+    transition: background 0.15s;
+  }
+  .pr-item:last-child { border-bottom: none; }
+  .pr-item:hover { background: rgba(255,255,255,.03); }
+  .pr-title {
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+  .pr-meta {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pr-repo { color: var(--blue); }
+  .pr-draft {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+  .no-prs {
+    padding: 16px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Commits */
+  .commit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .commit-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-item:hover { background: rgba(255,255,255,.02); }
+  .commit-msg {
+    font-size: 0.8rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .commit-foot {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .commit-repo {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--blue);
+  }
+  .commit-sha {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+  .commit-ago {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <p class="section-label">// code</p>
+    <h1>GitHub · BartSte</h1>
+    <p>Repos, open PRs, and recent commits · <a href="https://github.com/BartSte" target="_blank" style="color:var(--blue);text-decoration:none;">github.com/BartSte</a></p>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="label">📁 repos</div>
+      <div class="value">{{ repos | length }}</div>
+      <div class="sub">recently pushed</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">🔀 open PRs</div>
+      <div class="value">{{ open_prs | length }}</div>
+      <div class="sub">awaiting review</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">📝 last pushed</div>
+      {% if repos %}
+      <div class="value" style="font-size:1rem;padding-top:4px;">{{ repos[0].name }}</div>
+      <div class="sub">{{ repos[0].pushed_ago }}</div>
+      {% else %}
+      <div class="value">—</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="github-layout">
+    <!-- REPOS -->
+    <div>
+      <p class="section-label">// repositories · sorted by activity</p>
+      <div class="repo-list">
+        {% for repo in repos %}
+        <a class="repo-card" href="{{ repo.url }}" target="_blank">
+          <div class="repo-head">
+            <span class="repo-name">{{ repo.name }}</span>
+            <span class="repo-time">{{ repo.pushed_ago }}</span>
+          </div>
+          {% if repo.description %}
+          <div class="repo-desc">{{ repo.description }}</div>
+          {% endif %}
+          <div class="repo-foot">
+            {% if repo.language %}
+            <span class="lang-dot" style="background:{{ repo.lang_color }};"></span>
+            <span class="lang-name">{{ repo.language }}</span>
+            {% endif %}
+            {% if repo.stars > 0 %}
+            <span class="stars">★ {{ repo.stars }}</span>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <!-- OPEN PRs -->
+      <div class="pr-card">
+        <div class="pr-header">
+          🔀 open pull requests
+          <span class="pr-count">{{ open_prs | length }}</span>
+        </div>
+        {% if open_prs %}
+          {% for pr in open_prs %}
+          <a class="pr-item" href="{{ pr.url }}" target="_blank">
+            <div class="pr-title">
+              {% if pr.draft %}<span class="pr-draft">draft</span> {% endif %}
+              {{ pr.title }}
+            </div>
+            <div class="pr-meta">
+              <span class="pr-repo">{{ pr.repo_short }}</span>
+              <span>opened {{ pr.created }}</span>
+              <span>updated {{ pr.updated_ago }}</span>
+            </div>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="no-prs">🎉 inbox zero — no open PRs</div>
+        {% endif %}
+      </div>
+
+      <!-- RECENT COMMITS -->
+      <div class="commit-card">
+        <div class="pr-header">⚡ recent commits</div>
+        {% if commits %}
+          {% for c in commits %}
+          <a class="commit-item" href="{{ c.url }}" target="_blank">
+            <div class="commit-msg">{{ c.message }}</div>
+            <div class="commit-foot">
+              <span class="commit-repo">{{ c.repo }}</span>
+              <span class="commit-sha">{{ c.sha }}</span>
+              <span class="commit-ago">{{ c.date_ago }}</span>
+            </div>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="no-prs">No recent commits found.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

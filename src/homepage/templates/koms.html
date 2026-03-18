@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% block title %}KOMs & PRs — Hekkie{% endblock %}
+
+{% block extra_style %}
+  /* Tabs */
+  .tabs { display:flex; gap:4px; margin-bottom:32px; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px 16px;
+    border-radius: 6px 6px 0 0;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* KOM cards */
+  .seg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  details.seg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  details.seg-card[open] { border-color: var(--accent); }
+  details.seg-card[open] summary { border-bottom: 1px solid var(--border); }
+
+  summary.seg-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  summary.seg-summary::-webkit-details-marker { display: none; }
+  summary.seg-summary:hover { background: rgba(255,255,255,0.02); }
+
+  .seg-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .seg-crown { font-size: 1.3rem; flex-shrink: 0; }
+  .seg-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    line-height: 1.3;
+  }
+  .seg-best {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .seg-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .seg-badge {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  .seg-leaderboard { padding: 12px 16px; }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank { font-family:var(--mono); font-size:0.75rem; min-width:22px; }
+  .lb-time { font-family:var(--mono); font-weight:600; flex:1; }
+  .lb-speed { font-family:var(--mono); font-size:0.78rem; color:var(--muted); }
+  .lb-date { font-family:var(--mono); font-size:0.72rem; color:var(--muted); margin-left:auto; }
+
+  /* PR tables */
+  .pr-section { margin-bottom: 48px; }
+  .pr-section h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .distances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+  .dist-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .dist-header {
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dist-km {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .dist-pr {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+  .dist-body { padding: 8px 0; }
+{% endblock %}
+
+{% block extra_head %}
+<script>
+  function switchTab(id) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('pane-' + id).classList.add('active');
+    document.getElementById('btn-' + id).classList.add('active');
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <p class="section-label">// performance</p>
+    <h1>KOMs &amp; Personal Records</h1>
+    <p>Segment leaderboards and all-time bests — synced from Garmin every 15 min</p>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="label">👑 KOM segments</div>
+      <div class="value">{{ kom_count }}</div>
+      <div class="sub">all-time bests held</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">🚴 cycling distances</div>
+      <div class="value">{{ records.cycling_prs | length }}</div>
+      <div class="sub">tracked PR distances</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">🏃 running distances</div>
+      <div class="value">{{ records.running_prs | length }}</div>
+      <div class="sub">tracked PR distances</div>
+    </div>
+    <div class="stat-box">
+      <div class="label">🏆 fastest 1 km cycle</div>
+      {% set fastest = records.cycling_prs | selectattr('distance', 'equalto', 1.0) | list %}
+      {% if fastest and fastest[0].entries %}
+      <div class="value" style="font-size:1.2rem;">{{ fastest[0].entries[0].Time }}</div>
+      <div class="sub">{{ fastest[0].entries[0]['Avg speed'] }}</div>
+      {% else %}
+      <div class="value">—</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="btn-koms" onclick="switchTab('koms')">👑 Segment KOMs ({{ records.segment_koms | length }})</button>
+    <button class="tab-btn" id="btn-cycling" onclick="switchTab('cycling')">🚴 Cycling PRs</button>
+    <button class="tab-btn" id="btn-running" onclick="switchTab('running')">🏃 Running PRs</button>
+  </div>
+
+  <!-- KOM SEGMENTS PANE -->
+  <div class="tab-pane active" id="pane-koms">
+    <div class="seg-grid">
+      {% for seg in records.segment_koms %}
+      <details class="seg-card">
+        <summary class="seg-summary">
+          <div class="seg-head">
+            <span class="seg-crown">{% if seg.is_kom %}👑{% else %}⏱{% endif %}</span>
+            <span class="seg-name">{{ seg.display_name }}</span>
+            <span class="seg-best">{{ seg.best_time }}</span>
+          </div>
+          <div class="seg-meta">
+            {% if seg.distance %}<span class="seg-badge">📏 {{ seg.distance }} km</span>{% endif %}
+            {% if seg.ascent %}<span class="seg-badge">⛰ {{ seg.ascent }} m</span>{% endif %}
+            <span class="seg-badge">🔁 {{ seg.matches }}×</span>
+          </div>
+        </summary>
+        {% if seg.leaderboard %}
+        <div class="seg-leaderboard">
+          {% for entry in seg.leaderboard[:10] %}
+          <div class="lb-row">
+            {% set rank = entry.get('Rank','') | int %}
+            <span class="lb-rank {% if rank == 1 %}rank-1{% elif rank == 2 %}rank-2{% elif rank == 3 %}rank-3{% endif %}">
+              {% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% else %}{{ rank }}{% endif %}
+            </span>
+            <span class="lb-time">{{ entry.get('Time', '') }}</span>
+            <span class="lb-speed">{{ entry.get('Avg speed', '') }}</span>
+            <span class="lb-date">{{ entry.get('Date', '') }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CYCLING PRs PANE -->
+  <div class="tab-pane" id="pane-cycling">
+    <div class="distances-grid">
+      {% for dist in records.cycling_prs %}
+      <div class="dist-card">
+        <div class="dist-header">
+          <span class="dist-km">🚴 {{ dist.distance | int if dist.distance == dist.distance | int else dist.distance }} km</span>
+          {% if dist.entries %}
+          <span class="dist-pr">{{ dist.entries[0].get('Time','') }}</span>
+          {% endif %}
+        </div>
+        <div class="dist-body">
+          {% if dist.entries %}
+          <table class="data-table">
+            <thead><tr><th>Rank</th><th>Time</th><th>Speed</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for e in dist.entries[:5] %}
+            {% set r = e.get('Rank','') | int %}
+            <tr>
+              <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
+                {% if r==1 %}🥇{% elif r==2 %}🥈{% elif r==3 %}🥉{% else %}{{ r }}{% endif %}
+              </td>
+              <td style="font-family:var(--mono);font-weight:600;">{{ e.get('Time','') }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:0.8rem;">{{ e.get('Avg speed','') }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:0.78rem;">{{ e.get('Date','') }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p style="padding:12px 16px;color:var(--muted);font-size:0.82rem;">No results yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- RUNNING PRs PANE -->
+  <div class="tab-pane" id="pane-running">
+    <div class="distances-grid">
+      {% for dist in records.running_prs %}
+      <div class="dist-card">
+        <div class="dist-header">
+          <span class="dist-km">🏃 {{ dist.distance | int if dist.distance == dist.distance | int else dist.distance }} km</span>
+          {% if dist.entries %}
+          <span class="dist-pr">{{ dist.entries[0].get('Time','') }}</span>
+          {% endif %}
+        </div>
+        <div class="dist-body">
+          {% if dist.entries %}
+          <table class="data-table">
+            <thead><tr><th>Rank</th><th>Time</th><th>Speed</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for e in dist.entries[:5] %}
+            {% set r = e.get('Rank','') | int %}
+            <tr>
+              <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
+                {% if r==1 %}🥇{% elif r==2 %}🥈{% elif r==3 %}🥉{% else %}{{ r }}{% endif %}
+              </td>
+              <td style="font-family:var(--mono);font-weight:600;">{{ e.get('Time','') }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:0.8rem;">{{ e.get('Avg speed','') }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:0.78rem;">{{ e.get('Date','') }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p style="padding:12px 16px;color:var(--muted);font-size:0.82rem;">No results yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

@@ -1,356 +1,145 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hekkie — Home</title>
-  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0c0c14;
-      --surface: #13131f;
-      --surface2: #1c1c2e;
-      --border: #2a2a40;
-      --accent: #c51a8a;
-      --accent2: #7c3aed;
-      --accent-glow: rgba(197, 26, 138, 0.15);
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --green: #10b981;
-      --mono: 'JetBrains Mono', 'Fira Code', monospace;
-      --sans: 'Inter', system-ui, sans-serif;
-    }
+{% extends "base.html" %}
+{% block title %}Hekkie — Home{% endblock %}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+{% block extra_style %}
+  .hero { margin-bottom: 56px; }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: clamp(2.8rem, 8vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-tagline {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 500px;
+    font-weight: 300;
+  }
+  .hero-tagline strong { color: var(--text); font-weight: 500; }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      min-height: 100vh;
-      overflow-x: hidden;
-      line-height: 1.6;
-    }
+  .terminal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width:12px; height:12px; border-radius:50%; }
+  .dot-r { background:#ff5f57; }
+  .dot-y { background:#febc2e; }
+  .dot-g { background:#28c840; }
+  .terminal-title {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0 auto;
+  }
+  .terminal-body {
+    padding: 24px 28px;
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    line-height: 1.9;
+  }
+  .line { display:flex; gap:12px; }
+  .prompt { color: var(--accent); user-select:none; flex-shrink:0; }
+  .cmd { color: #7dd3fc; }
+  .out { color: var(--text); padding-left: 24px; }
+  .out.m { color: var(--muted); }
+  .out.g { color: var(--green); }
+  .cursor {
+    display:inline-block; width:9px; height:1.1em;
+    background:var(--accent); vertical-align:middle; margin-left:2px;
+    animation: blink 1s step-start infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-    /* Subtle grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--border) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.3;
-      pointer-events: none;
-      z-index: 0;
-    }
+  .stats-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+  #stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  .stat-item {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+  .stat-item:hover { border-color: var(--accent); }
+  .stat-label { font-family:var(--mono); font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+  .stat-value { font-family:var(--mono); font-size:0.95rem; color:var(--text); font-weight:500; }
+  .stat-value small { font-size:0.72rem; color:var(--muted); }
 
-    /* Radial glow in top-left */
-    body::after {
-      content: '';
-      position: fixed;
-      top: -200px;
-      left: -200px;
-      width: 700px;
-      height: 700px;
-      background: radial-gradient(circle, rgba(197,26,138,0.08) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
+  .nav-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .nav-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .nav-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 32px rgba(0,0,0,.3);
+    transform: translateY(-2px);
+  }
+  .nav-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .nav-card-icon { font-size: 1.5rem; }
+  .nav-card-title { font-size: 1rem; font-weight: 600; }
+  .nav-card-sub { font-size: 0.82rem; color: var(--muted); }
+  .nav-card-meta {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: auto;
+  }
+{% endblock %}
 
-    .page {
-      position: relative;
-      z-index: 1;
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-    }
-
-    /* ── HEADER ── */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 72px;
-    }
-
-    .logo {
-      font-family: var(--mono);
-      font-size: 1rem;
-      color: var(--accent);
-      letter-spacing: 0.05em;
-      text-decoration: none;
-    }
-
-    .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
-      50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(16,185,129,0); }
-    }
-
-    /* ── HERO ── */
-    .hero {
-      margin-bottom: 64px;
-    }
-
-    .hero-eyebrow {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.8rem, 8vw, 5rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.05;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #fff 40%, var(--accent) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-tagline {
-      font-size: 1.15rem;
-      color: var(--muted);
-      max-width: 500px;
-      font-weight: 300;
-    }
-
-    .hero-tagline strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    /* ── TERMINAL ABOUT ── */
-    .terminal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 48px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    }
-
-    .terminal-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      background: var(--surface2);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .dot-red   { background: #ff5f57; }
-    .dot-yellow{ background: #febc2e; }
-    .dot-green { background: #28c840; }
-
-    .terminal-title {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .terminal-body {
-      padding: 24px 28px;
-      font-family: var(--mono);
-      font-size: 0.9rem;
-      line-height: 1.9;
-    }
-
-    .line { display: flex; gap: 12px; }
-    .prompt { color: var(--accent); user-select: none; flex-shrink: 0; }
-    .cmd { color: #7dd3fc; }
-    .output { color: var(--text); padding-left: 24px; }
-    .output.muted { color: var(--muted); }
-    .output.highlight { color: var(--green); }
-    .cursor {
-      display: inline-block;
-      width: 9px;
-      height: 1.1em;
-      background: var(--accent);
-      vertical-align: middle;
-      margin-left: 2px;
-      animation: blink 1s step-start infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-    /* ── STATS ── */
-    .section-title {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--accent);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-
-    .stats-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 48px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
-    }
-
-    #stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 14px 16px;
-      background: var(--surface2);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      transition: border-color 0.2s;
-    }
-
-    .stat-item:hover { border-color: var(--accent); }
-
-    .stat-label {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .stat-value {
-      font-family: var(--mono);
-      font-size: 1rem;
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .stat-value small {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    /* ── ABOUT CARDS ── */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-      margin-bottom: 48px;
-    }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
-    }
-
-    .card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent-glow), 0 8px 32px rgba(0,0,0,0.3);
-      transform: translateY(-2px);
-    }
-
-    .card-icon {
-      font-size: 1.8rem;
-      margin-bottom: 12px;
-    }
-
-    .card h3 {
-      font-size: 0.95rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-
-    .card p {
-      font-size: 0.85rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding-top: 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    footer .left {
-      font-family: var(--mono);
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    footer .left span {
-      color: var(--accent);
-    }
-
-    footer .right {
-      font-size: 0.78rem;
-      color: var(--muted);
-      font-style: italic;
-    }
-
-    /* ── HTMX loading indicator ── */
-    .htmx-indicator { opacity: 0; transition: opacity 0.2s; }
-    .htmx-request .htmx-indicator { opacity: 1; }
-
-    @media (max-width: 600px) {
-      header { flex-direction: column; align-items: flex-start; gap: 16px; }
-    }
-  </style>
-</head>
-<body>
-<div class="page">
-
-  <!-- HEADER -->
-  <header>
-    <a class="logo" href="/">//hekkie</a>
-    <div class="status-badge">
-      <span class="status-dot"></span>
-      online · raspberrypi
-    </div>
-  </header>
-
+{% block content %}
   <!-- HERO -->
   <section class="hero">
     <p class="hero-eyebrow">// your personal assistant</p>
@@ -365,26 +154,26 @@
   <!-- TERMINAL -->
   <div class="terminal">
     <div class="terminal-bar">
-      <span class="dot dot-red"></span>
-      <span class="dot dot-yellow"></span>
-      <span class="dot dot-green"></span>
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
       <span class="terminal-title">hekkie@raspberrypi — zsh</span>
     </div>
     <div class="terminal-body">
       <div class="line"><span class="prompt">❯</span><span class="cmd">whoami</span></div>
-      <div class="output">Hekkie — AI assistant, resident of /home/barts, personality TBD.</div>
-
+      <div class="out">Hekkie — AI assistant, resident of /home/barts, personality TBD.</div>
       <br>
       <div class="line"><span class="prompt">❯</span><span class="cmd">cat SOUL.md | grep vibe</span></div>
-      <div class="output">Be genuinely helpful, not performatively helpful.</div>
-      <div class="output muted"># no "Great question!" here. ever.</div>
-
+      <div class="out">Be genuinely helpful, not performatively helpful.</div>
+      <div class="out m"># no "Great question!" here. ever.</div>
       <br>
-      <div class="line"><span class="prompt">❯</span><span class="cmd">cat /etc/motd</span></div>
-      <div class="output highlight">✓ Telegram connected</div>
-      <div class="output highlight">✓ OpenClaw agent: main session</div>
-      <div class="output highlight">✓ Calendar, email, KOMs, weather — all within reach</div>
-
+      <div class="line"><span class="prompt">❯</span><span class="cmd">systemctl --user status</span></div>
+      <div class="out g">✓ openclaw agent · main session</div>
+      <div class="out g">✓ garmin-update.timer · every 15 min</div>
+      <div class="out g">✓ telegram connected</div>
+      {% if latest_week %}
+      <div class="out g">✓ last activity: week {{ latest_week.number }} · {{ latest_week.total_km|int }} km · {{ latest_week.intensity }} intensity</div>
+      {% endif %}
       <br>
       <div class="line"><span class="prompt">❯</span><span class="cmd">_<span class="cursor"></span></span></div>
     </div>
@@ -392,7 +181,7 @@
 
   <!-- LIVE STATS -->
   <div class="stats-card">
-    <p class="section-title">// system — live</p>
+    <p class="section-label">// system — live</p>
     <div
       id="stats-grid"
       hx-get="/api/stats"
@@ -406,51 +195,36 @@
     </div>
   </div>
 
-  <!-- CARDS -->
-  <p class="section-title">// what I can do</p>
-  <div class="cards">
-    <div class="card">
-      <div class="card-icon">📅</div>
-      <h3>Calendar</h3>
-      <p>Read, add, and reschedule events in your Outlook calendars. "What's next week look like?"</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🚴</div>
-      <h3>KOM Tracker</h3>
-      <p>Fetch Garmin activities, detect personal records, track Komoot segment bests.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🌤</div>
-      <h3>Weather</h3>
-      <p>Current conditions and forecasts via Open-Meteo — no API key drama.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">💻</div>
-      <h3>Coding Agent</h3>
-      <p>Spawn Codex or Claude Code for feature builds, PR reviews, or refactoring sessions.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔐</div>
-      <h3>Dotfiles</h3>
-      <p>Manage and deploy your layered dotfiles across machines. Know where everything lives.</p>
-    </div>
-    <div class="card">
-      <div class="card-icon">🤖</div>
-      <h3>Just ask</h3>
-      <p>Telegram-native. Message me directly. I'm here, I'm fast, and I won't ghost you.</p>
-    </div>
+  <!-- NAV CARDS -->
+  <p class="section-label">// explore</p>
+  <div class="nav-cards">
+    <a class="nav-card" href="/activities">
+      <div class="nav-card-head">
+        <span class="nav-card-icon">📊</span>
+        <span class="nav-card-title">Activities</span>
+      </div>
+      <div class="nav-card-sub">Year-to-date training log. Cycling, running, gym — week by week with intensity tracking.</div>
+      {% if latest_week %}
+      <div class="nav-card-meta">this week: {{ latest_week.total_km|int }} km · {{ latest_week.intensity }} intensity min →</div>
+      {% else %}
+      <div class="nav-card-meta">view training log →</div>
+      {% endif %}
+    </a>
+    <a class="nav-card" href="/koms">
+      <div class="nav-card-head">
+        <span class="nav-card-icon">👑</span>
+        <span class="nav-card-title">KOMs & PRs</span>
+      </div>
+      <div class="nav-card-sub">Segment leaderboards and personal records across every distance you've ever pushed.</div>
+      <div class="nav-card-meta">all 24 segments · top 10 each →</div>
+    </a>
+    <a class="nav-card" href="/github">
+      <div class="nav-card-head">
+        <span class="nav-card-icon">🐙</span>
+        <span class="nav-card-title">GitHub</span>
+      </div>
+      <div class="nav-card-sub">Repos, open pull requests, recent commits. BartSte's code activity at a glance.</div>
+      <div class="nav-card-meta">view recent activity →</div>
+    </a>
   </div>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="left">
-      running on <span>Raspberry Pi 5</span> · model b · arm64
-    </div>
-    <div class="right">
-      "I don't sleep. I just wait."
-    </div>
-  </footer>
-
-</div>
-</body>
-</html>
+{% endblock %}
