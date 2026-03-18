@@ -2,10 +2,8 @@
 {% block title %}Calendar — Hekkie{% endblock %}
 
 {% block extra_style %}
-  .cal-layout { display: block; }
-
   /* Week grid */
-  .week-section { margin-bottom: 28px; }
+  .week-section { margin-bottom: 24px; }
   .week-label {
     font-family: var(--mono);
     font-size: 0.7rem;
@@ -19,241 +17,224 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 6px;
   }
+
+  /* Day cell */
   .day-cell {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 10px 8px;
-    min-height: 80px;
-    transition: border-color 0.15s;
+    min-height: 90px;
+    transition: border-color 0.15s, background 0.15s;
     overflow: hidden;
+    cursor: pointer;
+    user-select: none;
   }
-  .day-cell:hover { border-color: rgba(197,26,138,0.4); }
-  .day-cell.today {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent-glow);
-  }
-  .day-cell.weekend { opacity: 0.7; }
-  .day-cell.empty { opacity: 0.35; }
+  .day-cell:hover        { border-color: rgba(197,26,138,0.5); background: rgba(255,255,255,0.02); }
+  .day-cell.today        { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
+  .day-cell.weekend      { opacity: 0.65; }
+  .day-cell.empty        { opacity: 0.2; cursor: default; pointer-events: none; }
+  .day-cell.selected     { border-color: var(--accent); background: rgba(197,26,138,0.08); }
 
   .day-dow {
     font-family: var(--mono);
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-bottom: 2px;
   }
-  .day-cell.today .day-dow { color: var(--accent); }
+  .day-cell.today .day-dow,
+  .day-cell.selected .day-dow { color: var(--accent); }
 
   .day-num {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: var(--text);
     line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 7px;
   }
-  .day-cell.today .day-num { color: var(--accent); }
+  .day-cell.today .day-num,
+  .day-cell.selected .day-num { color: var(--accent); }
 
   .day-events { display: flex; flex-direction: column; gap: 2px; }
   .day-event-chip {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     border-radius: 3px;
-    padding: 2px 4px;
+    padding: 2px 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 500;
-    line-height: 1.4;
+    line-height: 1.45;
   }
   .day-more {
     font-family: var(--mono);
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     color: var(--muted);
     padding-top: 2px;
   }
 
-  /* Sidebar: upcoming list */
-  .upcoming-card {
+  /* Day detail panel */
+  #day-detail {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid var(--accent);
     border-radius: 12px;
+    padding: 0;
+    margin-top: 16px;
     overflow: hidden;
-    position: sticky;
-    top: 68px;
+    transition: all 0.2s;
   }
-  .upcoming-head {
+  #day-detail:empty { display: none; }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 14px 18px;
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
   }
-  .upcoming-day {
-    border-bottom: 1px solid rgba(42,42,64,.5);
-  }
-  .upcoming-day:last-child { border-bottom: none; }
-  .upcoming-day-head {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 10px 18px 4px;
-  }
-  .upcoming-dow {
+  .detail-dow {
     font-family: var(--mono);
     font-size: 0.72rem;
     color: var(--muted);
     text-transform: uppercase;
-    min-width: 26px;
+    letter-spacing: 0.08em;
   }
-  .upcoming-date {
-    font-size: 0.8rem;
+  .detail-date {
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text);
   }
-  .upcoming-month {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-  .upcoming-today-badge {
+  .detail-close {
     margin-left: auto;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 999px;
-    padding: 1px 8px;
-    font-family: var(--mono);
-    font-size: 0.65rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
   }
-  .upcoming-events { padding: 0 18px 10px; }
-  .upcoming-event {
+  .detail-close:hover { color: var(--text); background: var(--surface); }
+
+  .detail-event {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    font-size: 0.82rem;
+    gap: 10px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+    font-size: 0.88rem;
   }
-  .up-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .up-time {
+  .detail-event:last-child { border-bottom: none; }
+  .detail-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .detail-time {
     font-family: var(--mono);
-    font-size: 0.72rem;
+    font-size: 0.78rem;
     color: var(--muted);
-    min-width: 90px;
+    min-width: 110px;
     flex-shrink: 0;
   }
-  .up-title {
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .up-all-day {
+  .detail-title { color: var(--text); flex: 1; }
+  .detail-cal {
     font-family: var(--mono);
     font-size: 0.65rem;
-    padding: 1px 6px;
-    border-radius: 3px;
-    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 4px;
     flex-shrink: 0;
   }
-  .upcoming-empty { padding: 4px 0; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+  /* Loading state */
+  .htmx-request #day-detail { opacity: 0.5; }
+{% endblock %}
+
+{% block extra_head %}
+<script>
+  function selectDay(el, date) {
+    document.querySelectorAll('.day-cell').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
 {% endblock %}
 
 {% block content %}
   <div class="page-header">
     <p class="section-label">// schedule</p>
     <h1>Calendar</h1>
-    <p>Work + personal · synced via vdirsyncer every 5 min</p>
+    <p>Work + personal · synced via vdirsyncer every 5 min · click a day for details</p>
   </div>
 
   <!-- Legend -->
-  <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+  <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
     <div style="display:flex;align-items:center;gap:6px;">
-      <span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
-      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);">outlook_work</span>
+      <span style="width:9px;height:9px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+      <span style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);">work</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
-      <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;"></span>
-      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);">outlook_personal</span>
+      <span style="width:9px;height:9px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+      <span style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);">personal</span>
     </div>
-    <div style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;color:var(--muted);">
-      showing 3 weeks
-    </div>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:0.7rem;color:var(--muted);">3 weeks · Mon–Sun</div>
   </div>
 
-  <div class="cal-layout">
+  <!-- WEEK HEADER ROW -->
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;">
+    {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+    <div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:0 4px;">{{ d }}</div>
+    {% endfor %}
+  </div>
 
-    <!-- WEEK GRID -->
-    <div>
-      {% set ns = namespace(week_days=[], week_num=1) %}
-      {% for day in days %}
-        {% set ns.week_days = ns.week_days + [day] %}
+  <!-- WEEKS -->
+  {% set dow_order = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
 
-        {# Flush on Sunday or last day #}
-        {% if day.dow == 'Sunday' or loop.last %}
-          {# Pad to 7 if first week starts mid-week #}
-          {% if ns.week_num == 1 %}
-            {% set pad = [] %}
-            {% set first_dow = days[0].dow %}
-            {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
-            {% set start_offset = dow_map.get(first_dow, 0) %}
-          {% endif %}
+  {% for week in weeks %}
+  <div class="week-section">
+    <div class="week-grid">
+      {# Leading padding for first week #}
+      {% if loop.index == 1 %}
+        {% set first_offset = dow_order.get(week[0].dow, 0) %}
+        {% for _ in range(first_offset) %}
+        <div class="day-cell empty"></div>
+        {% endfor %}
+      {% endif %}
 
-          <div class="week-section">
-            {% set first = ns.week_days[0] %}
-            {% set last = ns.week_days[-1] %}
-            <div class="week-label">
-              {{ first.dow[:3] }} {{ first.dom }} {{ first.month }}
-              {% if first.month != last.month %} – {{ last.dom }} {{ last.month }}
-              {% else %} – {{ last.dom }}
-              {% endif %}
-            </div>
-            <div class="week-grid">
-              {# Pad first week from Monday #}
-              {% if ns.week_num == 1 %}
-                {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
-                {% for _ in range(dow_map.get(first.dow, 0)) %}
-                <div class="day-cell empty" style="min-height:80px;"></div>
-                {% endfor %}
-              {% endif %}
-
-              {% for day in ns.week_days %}
-              <div class="day-cell {% if day.is_today %}today{% elif day.is_weekend %}weekend{% endif %}">
-                <div class="day-dow">{{ day.dow[:3] }}</div>
-                <div class="day-num">{{ day.dom }}</div>
-                <div class="day-events">
-                  {% set visible = day.events[:3] %}
-                  {% for e in visible %}
-                  <div class="day-event-chip" style="background:{{ e.bg }};color:{{ e.dot }};">
-                    {% if not e.all_day %}{{ e.start }} {% endif %}{{ e.title }}
-                  </div>
-                  {% endfor %}
-                  {% if day.events | length > 3 %}
-                  <div class="day-more">+{{ day.events | length - 3 }} more</div>
-                  {% endif %}
-                </div>
-              </div>
-              {% endfor %}
-
-              {# Pad last week to Sunday #}
-              {% if loop.last %}
-                {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
-                {% set last_dow_idx = dow_map.get(last.dow, 6) %}
-                {% for _ in range(6 - last_dow_idx) %}
-                <div class="day-cell empty" style="min-height:80px;"></div>
-                {% endfor %}
-              {% endif %}
-            </div>
+      {% for day in week %}
+      <div
+        class="day-cell {% if day.is_today %}today{% elif day.is_weekend %}weekend{% endif %}"
+        hx-get="/api/calendar/day/{{ day.date }}"
+        hx-target="#day-detail"
+        hx-swap="innerHTML"
+        onclick="selectDay(this, '{{ day.date }}')"
+      >
+        <div class="day-dow">{{ day.dow[:3] }}</div>
+        <div class="day-num">{{ day.dom }}</div>
+        <div class="day-events">
+          {% for e in day.events[:3] %}
+          <div class="day-event-chip" style="background:{{ e.bg }};color:{{ e.dot }};">
+            {% if not e.all_day %}{{ e.start }} {% endif %}{{ e.title }}
           </div>
-
-          {% set ns.week_days = [] %}
-          {% set ns.week_num = ns.week_num + 1 %}
-        {% endif %}
+          {% endfor %}
+          {% if day.events | length > 3 %}
+          <div class="day-more">+{{ day.events | length - 3 }} more</div>
+          {% endif %}
+        </div>
+      </div>
       {% endfor %}
+
+      {# Trailing padding for last week #}
+      {% if loop.last %}
+        {% set last_offset = dow_order.get(week[-1].dow, 6) %}
+        {% for _ in range(6 - last_offset) %}
+        <div class="day-cell empty"></div>
+        {% endfor %}
+      {% endif %}
     </div>
-
-
   </div>
+  {% endfor %}
+
+  <!-- DAY DETAIL PANEL -->
+  <div id="day-detail"></div>
+
 {% endblock %}

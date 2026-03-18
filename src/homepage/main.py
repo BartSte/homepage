@@ -105,6 +105,51 @@ async def calendar_page(request: Request):
     })
 
 
+@app.get("/api/calendar/day/{date_str}")
+async def calendar_day(date_str: str):
+    """htmx fragment: full event list for a specific date."""
+    from homepage.calendar import get_events
+    from datetime import date
+    try:
+        target = date.fromisoformat(date_str)
+    except ValueError:
+        return HTMLResponse('<p style="color:var(--red)">Invalid date</p>')
+
+    days = get_events(days_ahead=21)
+    day = next((d for d in days if d["date"] == date_str), None)
+    if not day:
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;">No data for this date.</p>')
+
+    dow = target.strftime("%A")
+    dom = target.strftime("%-d")
+    month = target.strftime("%B %Y")
+
+    if not day["events"]:
+        body = '<p style="color:var(--muted);font-size:.85rem;padding:4px 0;">Nothing scheduled — enjoy the free day 🎉</p>'
+    else:
+        rows = []
+        for e in day["events"]:
+            if e["all_day"]:
+                time_str = "all day"
+            else:
+                time_str = f"{e['start']}–{e['end']}"
+            rows.append(f'''<div class="detail-event">
+  <span class="detail-dot" style="background:{e['dot']};"></span>
+  <span class="detail-time">{time_str}</span>
+  <span class="detail-title">{e['title']}</span>
+  <span class="detail-cal" style="color:{e['dot']};background:{e['bg']};">{e['label']}</span>
+</div>''')
+        body = "\n".join(rows)
+
+    html = f'''<div class="detail-header">
+  <span class="detail-dow">{dow}</span>
+  <span class="detail-date">{dom} {month}</span>
+  <button class="detail-close" onclick="document.getElementById('day-detail').innerHTML=''">✕</button>
+</div>
+{body}'''
+    return HTMLResponse(html)
+
+
 @app.get("/api/calendar-today")
 async def calendar_today():
     """htmx fragment: today's events."""
