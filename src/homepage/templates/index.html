@@ -100,6 +100,20 @@
   .stat-value { font-family:var(--mono); font-size:0.95rem; color:var(--text); font-weight:500; }
   .stat-value small { font-size:0.72rem; color:var(--muted); }
 
+  /* Today widget */
+  .today-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .today-event { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:0.85rem; border-bottom:1px solid rgba(42,42,64,.4); }
+  .today-event:last-child { border-bottom:none; }
+  .today-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .today-time { font-family:var(--mono); font-size:0.75rem; color:var(--muted); min-width:100px; flex-shrink:0; }
+  .today-title { color:var(--text); }
+
   .nav-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -195,6 +209,18 @@
     </div>
   </div>
 
+  <!-- TODAY'S CALENDAR -->
+  <div class="today-card">
+    <p class="section-label">// today's schedule</p>
+    <div
+      hx-get="/api/calendar-today"
+      hx-trigger="load, every 60s"
+      hx-swap="innerHTML"
+    >
+      <p style="color:var(--muted);font-size:.85rem;">Loading…</p>
+    </div>
+  </div>
+
   <!-- NAV CARDS -->
   <p class="section-label">// explore</p>
   <div class="nav-cards">
@@ -225,6 +251,14 @@
       </div>
       <div class="nav-card-sub">Repos, open pull requests, recent commits. BartSte's code activity at a glance.</div>
       <div class="nav-card-meta">view recent activity →</div>
+    </a>
+    <a class="nav-card" href="/calendar">
+      <div class="nav-card-head">
+        <span class="nav-card-icon">📅</span>
+        <span class="nav-card-title">Calendar</span>
+      </div>
+      <div class="nav-card-sub">Work and personal events, 3-week view. Synced every 5 minutes from Outlook.</div>
+      <div class="nav-card-meta">view schedule →</div>
     </a>
   </div>
 {% endblock %}

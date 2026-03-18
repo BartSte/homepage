@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from homepage import github, parser
+from homepage import calendar, github, parser
 
 app = FastAPI()
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
@@ -78,6 +78,53 @@ async def koms_page(request: Request):
         "records": records,
         "kom_count": kom_count,
     })
+
+
+# ── Calendar ──────────────────────────────────────────────────────────────────
+
+@app.get("/calendar")
+async def calendar_page(request: Request):
+    days = calendar.get_events(days_ahead=21)
+    today_events = days[0]["events"] if days else []
+    # Group into weeks for display
+    weeks: list[list] = []
+    current_week: list = []
+    for day in days:
+        current_week.append(day)
+        if day["dow"] == "Sunday" or day == days[-1]:
+            weeks.append(current_week)
+            current_week = []
+    if current_week:
+        weeks.append(current_week)
+    return templates.TemplateResponse("calendar.html", {
+        "request": request,
+        "active": "calendar",
+        "days": days,
+        "weeks": weeks,
+        "today_events": today_events,
+    })
+
+
+@app.get("/api/calendar-today")
+async def calendar_today():
+    """htmx fragment: today's events."""
+    from homepage.calendar import get_today_events
+    calendar._cache.clear()  # force refresh
+    events = get_today_events()
+    if not events:
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;padding:4px 0;">Nothing scheduled today 🎉</p>')
+    parts = []
+    for e in events:
+        if e["all_day"]:
+            time_str = "all day"
+        else:
+            time_str = f"{e['start']}–{e['end']}"
+        parts.append(f'''<div class="today-event">
+  <span class="today-dot" style="background:{e['dot']};"></span>
+  <span class="today-time">{time_str}</span>
+  <span class="today-title">{e['title']}</span>
+</div>''')
+    return HTMLResponse("\n".join(parts))
 
 
 # ── GitHub ────────────────────────────────────────────────────────────────────

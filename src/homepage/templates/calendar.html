@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block title %}Calendar — Hekkie{% endblock %}
+
+{% block extra_style %}
+  /* Layout: week grid left, upcoming list right */
+  .cal-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .cal-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Week grid */
+  .week-section { margin-bottom: 28px; }
+  .week-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 8px;
+    min-height: 80px;
+    transition: border-color 0.15s;
+    overflow: hidden;
+  }
+  .day-cell:hover { border-color: rgba(197,26,138,0.4); }
+  .day-cell.today {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-glow);
+  }
+  .day-cell.weekend { opacity: 0.7; }
+  .day-cell.empty { opacity: 0.35; }
+
+  .day-dow {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+  .day-cell.today .day-dow { color: var(--accent); }
+
+  .day-num {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .day-cell.today .day-num { color: var(--accent); }
+
+  .day-events { display: flex; flex-direction: column; gap: 2px; }
+  .day-event-chip {
+    font-size: 0.62rem;
+    border-radius: 3px;
+    padding: 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .day-more {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+
+  /* Sidebar: upcoming list */
+  .upcoming-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    position: sticky;
+    top: 68px;
+  }
+  .upcoming-head {
+    padding: 14px 18px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .upcoming-day {
+    border-bottom: 1px solid rgba(42,42,64,.5);
+  }
+  .upcoming-day:last-child { border-bottom: none; }
+  .upcoming-day-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 18px 4px;
+  }
+  .upcoming-dow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    min-width: 26px;
+  }
+  .upcoming-date {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .upcoming-month {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .upcoming-today-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+  }
+  .upcoming-events { padding: 0 18px 10px; }
+  .upcoming-event {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.82rem;
+  }
+  .up-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .up-time {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+  .up-title {
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .up-all-day {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .upcoming-empty { padding: 4px 0; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <p class="section-label">// schedule</p>
+    <h1>Calendar</h1>
+    <p>Work + personal · synced via vdirsyncer every 5 min</p>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);">outlook_work</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+      <span style="font-family:var(--mono);font-size:0.75rem;color:var(--muted);">outlook_personal</span>
+    </div>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:0.72rem;color:var(--muted);">
+      showing 3 weeks
+    </div>
+  </div>
+
+  <div class="cal-layout">
+
+    <!-- WEEK GRID -->
+    <div>
+      {% set ns = namespace(week_days=[], week_num=1) %}
+      {% for day in days %}
+        {% set ns.week_days = ns.week_days + [day] %}
+
+        {# Flush on Sunday or last day #}
+        {% if day.dow == 'Sunday' or loop.last %}
+          {# Pad to 7 if first week starts mid-week #}
+          {% if ns.week_num == 1 %}
+            {% set pad = [] %}
+            {% set first_dow = days[0].dow %}
+            {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
+            {% set start_offset = dow_map.get(first_dow, 0) %}
+          {% endif %}
+
+          <div class="week-section">
+            {% set first = ns.week_days[0] %}
+            {% set last = ns.week_days[-1] %}
+            <div class="week-label">
+              {{ first.dow[:3] }} {{ first.dom }} {{ first.month }}
+              {% if first.month != last.month %} – {{ last.dom }} {{ last.month }}
+              {% else %} – {{ last.dom }}
+              {% endif %}
+            </div>
+            <div class="week-grid">
+              {# Pad first week from Monday #}
+              {% if ns.week_num == 1 %}
+                {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
+                {% for _ in range(dow_map.get(first.dow, 0)) %}
+                <div class="day-cell empty" style="min-height:80px;"></div>
+                {% endfor %}
+              {% endif %}
+
+              {% for day in ns.week_days %}
+              <div class="day-cell {% if day.is_today %}today{% elif day.is_weekend %}weekend{% endif %}">
+                <div class="day-dow">{{ day.dow[:3] }}</div>
+                <div class="day-num">{{ day.dom }}</div>
+                <div class="day-events">
+                  {% set visible = day.events[:3] %}
+                  {% for e in visible %}
+                  <div class="day-event-chip" style="background:{{ e.bg }};color:{{ e.dot }};">
+                    {% if not e.all_day %}{{ e.start }} {% endif %}{{ e.title }}
+                  </div>
+                  {% endfor %}
+                  {% if day.events | length > 3 %}
+                  <div class="day-more">+{{ day.events | length - 3 }} more</div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+
+              {# Pad last week to Sunday #}
+              {% if loop.last %}
+                {% set dow_map = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
+                {% set last_dow_idx = dow_map.get(last.dow, 6) %}
+                {% for _ in range(6 - last_dow_idx) %}
+                <div class="day-cell empty" style="min-height:80px;"></div>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+
+          {% set ns.week_days = [] %}
+          {% set ns.week_num = ns.week_num + 1 %}
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- UPCOMING SIDEBAR -->
+    <div>
+      <div class="upcoming-card">
+        <div class="upcoming-head">📅 upcoming</div>
+        <div style="max-height:680px;overflow-y:auto;">
+          {% set shown = [] %}
+          {% for day in days %}
+            {% if day.event_count > 0 or day.is_today %}
+              {% if shown | length < 14 %}
+                {% set _ = shown.append(day) %}
+                <div class="upcoming-day">
+                  <div class="upcoming-day-head">
+                    <span class="upcoming-dow">{{ day.dow[:3] }}</span>
+                    <span class="upcoming-date">{{ day.dom }}</span>
+                    <span class="upcoming-month">{{ day.month }}</span>
+                    {% if day.is_today %}
+                    <span class="upcoming-today-badge">today</span>
+                    {% endif %}
+                  </div>
+                  <div class="upcoming-events">
+                    {% if day.events %}
+                      {% for e in day.events %}
+                      <div class="upcoming-event">
+                        <span class="up-dot" style="background:{{ e.dot }};"></span>
+                        {% if e.all_day %}
+                          <span class="up-time" style="color:var(--muted);">all day</span>
+                          <span class="up-title">{{ e.title }}</span>
+                          <span class="up-all-day" style="background:{{ e.bg }};color:{{ e.dot }};">{{ e.label }}</span>
+                        {% else %}
+                          <span class="up-time">{{ e.start }}–{{ e.end }}</span>
+                          <span class="up-title">{{ e.title }}</span>
+                        {% endif %}
+                      </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="upcoming-empty">free 🎉</div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
