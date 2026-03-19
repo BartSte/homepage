@@ -2,7 +2,10 @@
 {% block title %}Calendar — Hekkie{% endblock %}
 
 {% block extra_style %}
-  /* Week grid */
+  /* ── DESKTOP: week grid ─────────────────────────── */
+  .cal-grid-view  { display: block; }
+  .cal-list-view  { display: none; }
+
   .week-section { margin-bottom: 24px; }
   .week-label {
     font-family: var(--mono);
@@ -17,8 +20,6 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 6px;
   }
-
-  /* Day cell */
   .day-cell {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -33,7 +34,7 @@
   .day-cell:hover        { border-color: rgba(197,26,138,0.5); background: rgba(255,255,255,0.02); }
   .day-cell.today        { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
   .day-cell.weekend      { opacity: 0.65; }
-  .day-cell.empty        { opacity: 0.2; cursor: default; pointer-events: none; }
+  .day-cell.empty        { opacity: 0.15; cursor: default; pointer-events: none; }
   .day-cell.selected     { border-color: var(--accent); background: rgba(197,26,138,0.08); }
 
   .day-dow {
@@ -46,7 +47,6 @@
   }
   .day-cell.today .day-dow,
   .day-cell.selected .day-dow { color: var(--accent); }
-
   .day-num {
     font-size: 1.05rem;
     font-weight: 700;
@@ -56,7 +56,6 @@
   }
   .day-cell.today .day-num,
   .day-cell.selected .day-num { color: var(--accent); }
-
   .day-events { display: flex; flex-direction: column; gap: 2px; }
   .day-event-chip {
     font-size: 0.6rem;
@@ -75,18 +74,15 @@
     padding-top: 2px;
   }
 
-  /* Day detail panel */
+  /* ── DETAIL PANEL (desktop) ─────────────────────── */
   #day-detail {
     background: var(--surface);
     border: 1px solid var(--accent);
     border-radius: 12px;
-    padding: 0;
-    margin-top: 16px;
     overflow: hidden;
-    transition: all 0.2s;
+    margin-top: 16px;
   }
   #day-detail:empty { display: none; }
-
   .detail-header {
     display: flex;
     align-items: center;
@@ -95,80 +91,75 @@
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
   }
-  .detail-dow {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .detail-date {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-  }
+  .detail-dow  { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .detail-date { font-size: 0.95rem; font-weight: 600; color: var(--text); }
   .detail-close {
     margin-left: auto;
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 0.85rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 0.85rem; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.15s, background 0.15s;
   }
   .detail-close:hover { color: var(--text); background: var(--surface); }
-
   .detail-event {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex; align-items: center; gap: 10px;
     padding: 10px 18px;
     border-bottom: 1px solid rgba(42,42,64,.4);
     font-size: 0.88rem;
   }
   .detail-event:last-child { border-bottom: none; }
   .detail-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .detail-time {
-    font-family: var(--mono);
-    font-size: 0.78rem;
-    color: var(--muted);
-    min-width: 110px;
-    flex-shrink: 0;
-  }
+  .detail-time { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); min-width: 110px; flex-shrink: 0; }
   .detail-title { color: var(--text); flex: 1; }
-  .detail-cal {
-    font-family: var(--mono);
-    font-size: 0.65rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    flex-shrink: 0;
-  }
-
-  /* Loading state */
+  .detail-cal  { font-family: var(--mono); font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
   .htmx-request #day-detail { opacity: 0.5; }
 
-  /* Mobile: compact cells — just number + dots */
+  /* ── MOBILE: list view ──────────────────────────── */
   @media (max-width: 640px) {
-    .week-grid { gap: 4px; }
-    .day-cell { padding: 6px 4px; min-height: 54px; border-radius: 7px; }
-    .day-dow { display: none; }
-    .day-num { font-size: 0.88rem; margin-bottom: 4px; text-align: center; }
-    .day-event-chip { display: none; }
-    .day-more { display: none; }
-    .day-events-dots { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
-    .event-dot-sm {
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      flex-shrink: 0;
+    .cal-grid-view { display: none; }
+    .cal-list-view { display: flex; flex-direction: column; gap: 8px; }
+
+    .cal-day-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
     }
-    .week-label { font-size: 0.65rem; }
-    .detail-event { flex-wrap: wrap; gap: 6px; }
-    .detail-time { min-width: auto; font-size: 0.72rem; }
+    .cal-day-card.today-card  { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow); }
+    .cal-day-card.empty-card  { opacity: 0.45; }
+
+    .cal-day-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .cal-day-card.today-card .cal-day-head { background: rgba(197,26,138,0.1); }
+    .cal-day-card.empty-card .cal-day-head { border-bottom: none; }
+
+    .cal-dow  { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; min-width: 28px; }
+    .cal-date { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+    .cal-month { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+    .cal-today-badge {
+      margin-left: auto;
+      background: var(--accent); color: #fff;
+      border-radius: 999px; padding: 1px 9px;
+      font-family: var(--mono); font-size: 0.65rem;
+    }
+    .cal-free { padding: 4px 14px 10px; font-size: 0.8rem; color: var(--muted); font-style: italic; }
+
+    .cal-event-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px;
+      border-bottom: 1px solid rgba(42,42,64,.35);
+      font-size: 0.84rem;
+    }
+    .cal-event-row:last-child { border-bottom: none; }
+    .cal-ev-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .cal-ev-time { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); min-width: 96px; flex-shrink: 0; }
+    .cal-ev-title { color: var(--text); flex: 1; }
   }
-  /* Hide dot view on desktop */
-  .day-events-dots { display: none; }
 {% endblock %}
 
 {% block extra_head %}
@@ -184,7 +175,7 @@
   <div class="page-header">
     <p class="section-label">// schedule</p>
     <h1>Calendar</h1>
-    <p>Work + personal · synced via vdirsyncer every 5 min · click a day for details</p>
+    <p>Work + personal · synced every 5 min</p>
   </div>
 
   <!-- Legend -->
@@ -197,70 +188,87 @@
       <span style="width:9px;height:9px;border-radius:50%;background:#10b981;display:inline-block;"></span>
       <span style="font-family:var(--mono);font-size:0.72rem;color:var(--muted);">personal</span>
     </div>
-    <div style="margin-left:auto;font-family:var(--mono);font-size:0.7rem;color:var(--muted);">3 weeks · Mon–Sun</div>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:0.7rem;color:var(--muted);">3 weeks</div>
   </div>
 
-  <!-- WEEK HEADER ROW -->
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;">
-    {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
-    <div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:0 4px;">{{ d }}</div>
-    {% endfor %}
-  </div>
-
-  <!-- WEEKS -->
-  {% set dow_order = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
-
-  {% for week in weeks %}
-  <div class="week-section">
-    <div class="week-grid">
-      {# Leading padding for first week #}
-      {% if loop.index == 1 %}
-        {% set first_offset = dow_order.get(week[0].dow, 0) %}
-        {% for _ in range(first_offset) %}
-        <div class="day-cell empty"></div>
-        {% endfor %}
-      {% endif %}
-
-      {% for day in week %}
-      <div
-        class="day-cell {% if day.is_today %}today{% elif day.is_weekend %}weekend{% endif %}"
-        hx-get="/api/calendar/day/{{ day.date }}"
-        hx-target="#day-detail"
-        hx-swap="innerHTML"
-        onclick="selectDay(this, '{{ day.date }}')"
-      >
-        <div class="day-dow">{{ day.dow[:3] }}</div>
-        <div class="day-num">{{ day.dom }}</div>
-        <div class="day-events">
-          {% for e in day.events[:3] %}
-          <div class="day-event-chip" style="background:{{ e.bg }};color:{{ e.dot }};">
-            {% if not e.all_day %}{{ e.start }} {% endif %}{{ e.title }}
-          </div>
-          {% endfor %}
-          {% if day.events | length > 3 %}
-          <div class="day-more">+{{ day.events | length - 3 }} more</div>
-          {% endif %}
-        </div>
-        <div class="day-events-dots">
-          {% for e in day.events[:5] %}
-          <span class="event-dot-sm" style="background:{{ e.dot }};"></span>
-          {% endfor %}
-        </div>
-      </div>
+  <!-- ══ DESKTOP: week grid ══ -->
+  <div class="cal-grid-view">
+    <!-- Day-of-week header -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;">
+      {% for d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+      <div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:center;padding:0 4px;">{{ d }}</div>
       {% endfor %}
+    </div>
 
-      {# Trailing padding for last week #}
-      {% if loop.last %}
-        {% set last_offset = dow_order.get(week[-1].dow, 6) %}
-        {% for _ in range(6 - last_offset) %}
-        <div class="day-cell empty"></div>
+    {% set dow_order = {'Monday':0,'Tuesday':1,'Wednesday':2,'Thursday':3,'Friday':4,'Saturday':5,'Sunday':6} %}
+    {% for week in weeks %}
+    <div class="week-section">
+      <div class="week-grid">
+        {% if loop.index == 1 %}
+          {% set first_offset = dow_order.get(week[0].dow, 0) %}
+          {% for _ in range(first_offset) %}
+          <div class="day-cell empty"></div>
+          {% endfor %}
+        {% endif %}
+
+        {% for day in week %}
+        <div
+          class="day-cell {% if day.is_today %}today{% elif day.is_weekend %}weekend{% endif %}"
+          hx-get="/api/calendar/day/{{ day.date }}"
+          hx-target="#day-detail"
+          hx-swap="innerHTML"
+          onclick="selectDay(this, '{{ day.date }}')"
+        >
+          <div class="day-dow">{{ day.dow[:3] }}</div>
+          <div class="day-num">{{ day.dom }}</div>
+          <div class="day-events">
+            {% for e in day.events[:3] %}
+            <div class="day-event-chip" style="background:{{ e.bg }};color:{{ e.dot }};">
+              {% if not e.all_day %}{{ e.start }} {% endif %}{{ e.title }}
+            </div>
+            {% endfor %}
+            {% if day.events | length > 3 %}
+            <div class="day-more">+{{ day.events | length - 3 }} more</div>
+            {% endif %}
+          </div>
+        </div>
         {% endfor %}
+
+        {% if loop.last %}
+          {% set last_offset = dow_order.get(week[-1].dow, 6) %}
+          {% for _ in range(6 - last_offset) %}
+          <div class="day-cell empty"></div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <div id="day-detail"></div>
+  </div>
+
+  <!-- ══ MOBILE: day list ══ -->
+  <div class="cal-list-view">
+    {% for day in days %}
+    <div class="cal-day-card {% if day.is_today %}today-card{% elif day.event_count == 0 and not day.is_weekend %}{% endif %}">
+      <div class="cal-day-head">
+        <span class="cal-dow">{{ day.dow[:3] }}</span>
+        <span class="cal-date">{{ day.dom }}</span>
+        <span class="cal-month">{{ day.month }}</span>
+        {% if day.is_today %}<span class="cal-today-badge">today</span>{% endif %}
+      </div>
+      {% if day.events %}
+        {% for e in day.events %}
+        <div class="cal-event-row">
+          <span class="cal-ev-dot" style="background:{{ e.dot }};"></span>
+          <span class="cal-ev-time">{% if e.all_day %}all day{% else %}{{ e.start }}–{{ e.end }}{% endif %}</span>
+          <span class="cal-ev-title">{{ e.title }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="cal-free">free 🎉</div>
       {% endif %}
     </div>
+    {% endfor %}
   </div>
-  {% endfor %}
-
-  <!-- DAY DETAIL PANEL -->
-  <div id="day-detail"></div>
-
 {% endblock %}

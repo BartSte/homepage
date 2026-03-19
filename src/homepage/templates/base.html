@@ -125,9 +125,20 @@
       color: var(--muted);
     }
     @media (max-width: 600px) {
-      .nav-inner { height: auto; flex-wrap: wrap; padding: 8px 0; gap: 4px; }
-      .nav-logo { margin-right: 12px; }
-      .nav-links { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+      nav { padding: 0 12px; }
+      .nav-inner { height: auto; flex-wrap: wrap; padding: 8px 0; gap: 0; }
+      .nav-logo { margin-right: 8px; padding: 6px 0; }
+      .nav-links {
+        flex: 0 0 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+        gap: 0;
+      }
+      .nav-links::-webkit-scrollbar { display: none; }
+      .nav-link { padding: 6px 10px; font-size: 0.82rem; flex-shrink: 0; }
       .nav-right { display: none; }
     }
 
