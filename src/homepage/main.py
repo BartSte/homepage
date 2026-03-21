@@ -188,6 +188,116 @@ async def github_page(request: Request):
     })
 
 
+# ── Picnic ────────────────────────────────────────────────────────────────────
+
+@app.get("/picnic")
+async def picnic_page(request: Request):
+    return templates.TemplateResponse("picnic.html", {
+        "request": request,
+        "active": "picnic",
+    })
+
+
+@app.get("/api/picnic/status")
+async def picnic_status():
+    """htmx fragment: Picnic order status and cart summary."""
+    import json
+    import subprocess
+    from pathlib import Path
+
+    venv_python = Path.home() / ".openclaw/picnic/.venv/bin/python"
+    tools_py = Path.home() / ".openclaw/picnic/picnic_tools.py"
+
+    try:
+        result = subprocess.run(
+            [str(venv_python), str(tools_py), "get_status"],
+            capture_output=True, text=True, timeout=10
+        )
+        data = json.loads(result.stdout)
+    except Exception as e:
+        return HTMLResponse(f'<p style="color:var(--red);font-size:.85rem;">Error: {e}</p>')
+
+    if not data.get("ok"):
+        return HTMLResponse(f'<p style="color:var(--red);font-size:.85rem;">{data.get("error","Unknown error")}</p>')
+
+    today = data.get("today", "")
+    next_order = data.get("next_order_date")
+    last_delivery = data.get("last_delivery_date", "—")
+    due_count = len(data.get("staples_due", []))
+    total_staples = data.get("total_staples", 0)
+    feedback_count = data.get("unapplied_feedback", 0)
+
+    if next_order:
+        from datetime import date
+        today_dt = date.fromisoformat(today)
+        next_dt = date.fromisoformat(next_order)
+        delta = (next_dt - today_dt).days
+        if delta < 0:
+            schedule_html = f'<span style="color:var(--red)">⚠ overdue by {abs(delta)} days</span>'
+        elif delta == 0:
+            schedule_html = '<span style="color:var(--accent)">📦 order due today</span>'
+        else:
+            schedule_html = f'<span style="color:var(--green)">✓ next order in {delta} days ({next_order})</span>'
+    else:
+        schedule_html = '<span style="color:var(--muted)">not scheduled yet</span>'
+
+    due_color = "var(--red)" if due_count > 0 else "var(--green)"
+
+    html = f"""
+<div class="picnic-stat"><span class="picnic-label">schedule</span><span class="picnic-val">{schedule_html}</span></div>
+<div class="picnic-stat"><span class="picnic-label">last delivery</span><span class="picnic-val">{last_delivery or "—"}</span></div>
+<div class="picnic-stat"><span class="picnic-label">staples due</span><span class="picnic-val" style="color:{due_color}">{due_count} / {total_staples}</span></div>
+<div class="picnic-stat"><span class="picnic-label">pending feedback</span><span class="picnic-val">{feedback_count}</span></div>
+"""
+    return HTMLResponse(html)
+
+
+@app.get("/api/picnic/staples")
+async def picnic_staples():
+    """htmx fragment: staples table."""
+    import json
+    import subprocess
+    from pathlib import Path
+
+    venv_python = Path.home() / ".openclaw/picnic/.venv/bin/python"
+    tools_py = Path.home() / ".openclaw/picnic/picnic_tools.py"
+
+    try:
+        result = subprocess.run(
+            [str(venv_python), str(tools_py), "staple_list"],
+            capture_output=True, text=True, timeout=10
+        )
+        data = json.loads(result.stdout)
+    except Exception as e:
+        return HTMLResponse(f'<p style="color:var(--red);font-size:.85rem;">Error: {e}</p>')
+
+    staples = data.get("staples", [])
+    if not staples:
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;">No staples tracked yet.</p>')
+
+    rows = ""
+    for s in staples:
+        due = s.get("is_due", False)
+        badge = '<span class="badge badge-due">due</span>' if due else '<span class="badge badge-ok">ok</span>'
+        last = s.get("last_ordered_date") or "—"
+        next_due = s.get("next_due") or "—"
+        interval = s.get("reorder_interval_days", "?")
+        rows += f"""<tr>
+  <td>{s['name']}</td>
+  <td>{badge}</td>
+  <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{last}</td>
+  <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{next_due}</td>
+  <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{interval}d</td>
+</tr>"""
+
+    return HTMLResponse(f"""<table class="staples-table">
+  <thead><tr>
+    <th>item</th><th>status</th><th>last ordered</th><th>next due</th><th>interval</th>
+  </tr></thead>
+  <tbody>{rows}</tbody>
+</table>""")
+
+
 # ── Live system stats (htmx) ──────────────────────────────────────────────────
 
 @app.get("/api/stats")

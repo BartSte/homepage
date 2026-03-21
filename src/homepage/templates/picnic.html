@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Hekkie — Picnic{% endblock %}
+
+{% block extra_style %}
+  .picnic-header { margin-bottom: 40px; }
+  .picnic-header h2 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .picnic-header p { color: var(--muted); font-size: 0.95rem; }
+
+  .picnic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .picnic-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+    font-size: 0.875rem;
+  }
+  .picnic-stat:last-child { border-bottom: none; }
+  .picnic-label {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .picnic-val { color: var(--text); font-weight: 500; }
+
+  .staples-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 8px;
+  }
+  .staples-table th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .staples-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(42,42,64,.3);
+    color: var(--text);
+  }
+  .staples-table tr:last-child td { border-bottom: none; }
+  .staples-table tr:hover td { background: rgba(255,255,255,.02); }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .badge-due { background: rgba(239,68,68,.15); color: #ef4444; }
+  .badge-ok { background: rgba(16,185,129,.15); color: #10b981; }
+
+  .cmd-hint {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 8px;
+    line-height: 1.8;
+  }
+  .cmd-hint .kw { color: var(--accent); }
+{% endblock %}
+
+{% block content %}
+  <div class="picnic-header">
+    <h2>🛒 Picnic</h2>
+    <p>Automated weekly grocery ordering — managed by Hekkie.</p>
+  </div>
+
+  <!-- ORDER STATUS -->
+  <p class="section-label">// order status — live</p>
+  <div class="picnic-card">
+    <div
+      hx-get="/api/picnic/status"
+      hx-trigger="load, every 60s"
+      hx-swap="innerHTML"
+    >
+      <div class="picnic-stat">
+        <span class="picnic-label">⏳ loading</span>
+        <span class="picnic-val">…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAPLES -->
+  <p class="section-label">// tracked staples</p>
+  <div class="picnic-card">
+    <div
+      hx-get="/api/picnic/staples"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      <p style="color:var(--muted);font-size:.85rem;">Loading…</p>
+    </div>
+  </div>
+
+  <!-- COMMANDS -->
+  <p class="section-label">// telegram commands</p>
+  <div class="picnic-card">
+    <div class="cmd-hint">
+      <div><span class="kw">/picnic status</span> — order schedule + staples due</div>
+      <div><span class="kw">/picnic order now</span> — trigger order immediately</div>
+      <div><span class="kw">/picnic order check</span> — check schedule without ordering</div>
+      <div><span class="kw">/picnic recipe</span> <em>pasta carbonara for 2</em> — search ingredients</div>
+      <div><span class="kw">/picnic staple add</span> <em>name</em> — add a staple to tracking</div>
+      <div><span class="kw">/picnic staple list</span> — list all staples with reorder dates</div>
+      <div><span class="kw">/picnic feedback</span> <em>text</em> — store feedback for next order</div>
+      <div><span class="kw">/picnic delivery</span> <em>YYYY-MM-DD</em> — record last delivery date</div>
+      <div><span class="kw">/picnic interval</span> <em>days</em> — change order interval</div>
+    </div>
+  </div>
+{% endblock %}
