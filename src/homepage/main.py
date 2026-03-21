@@ -252,6 +252,46 @@ async def picnic_status():
     return HTMLResponse(html)
 
 
+@app.get("/api/picnic/meals")
+async def picnic_meals():
+    """htmx fragment: recent meals ordered."""
+    import json
+    import subprocess
+    from pathlib import Path
+
+    venv_python = Path.home() / ".openclaw/picnic/.venv/bin/python"
+    tools_py = Path.home() / ".openclaw/picnic/picnic_tools.py"
+
+    try:
+        result = subprocess.run(
+            [str(venv_python), str(tools_py), "get_meal_history", "8"],
+            capture_output=True, text=True, timeout=10
+        )
+        data = json.loads(result.stdout)
+    except Exception as e:
+        return HTMLResponse(f'<p style="color:var(--red);font-size:.85rem;">Error: {e}</p>')
+
+    meals = data.get("meals", [])
+    if not meals:
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;">No meal history yet.</p>')
+
+    # Group by order_date
+    from collections import defaultdict
+    by_date = defaultdict(list)
+    for m in meals:
+        by_date[m["order_date"]].append(m)
+
+    html = ""
+    for date, items in sorted(by_date.items(), reverse=True):
+        html += f'<div class="meal-week"><span class="meal-date">{date}</span>'
+        for m in items:
+            cuisine = f' <span class="meal-cuisine">{m["cuisine"]}</span>' if m.get("cuisine") else ""
+            html += f'<div class="meal-row">🍽 {m["name"]}{cuisine}</div>'
+        html += '</div>'
+
+    return HTMLResponse(html)
+
+
 @app.get("/api/picnic/staples")
 async def picnic_staples():
     """htmx fragment: staples table."""

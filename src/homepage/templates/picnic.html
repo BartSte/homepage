@@ -66,6 +66,30 @@
   .badge-due { background: rgba(239,68,68,.15); color: #ef4444; }
   .badge-ok { background: rgba(16,185,129,.15); color: #10b981; }
 
+  .meal-week { margin-bottom: 16px; }
+  .meal-date {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 6px;
+  }
+  .meal-row {
+    font-size: 0.875rem;
+    color: var(--text);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(42,42,64,.3);
+  }
+  .meal-row:last-child { border-bottom: none; }
+  .meal-cuisine {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-left: 6px;
+  }
+
   .cmd-hint {
     font-family: var(--mono);
     font-size: 0.78rem;
@@ -98,6 +122,18 @@
         <span class="picnic-label">⏳ loading</span>
         <span class="picnic-val">…</span>
       </div>
+    </div>
+  </div>
+
+  <!-- RECENT MEALS -->
+  <p class="section-label">// recent meals</p>
+  <div class="picnic-card">
+    <div
+      hx-get="/api/picnic/meals"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      <p style="color:var(--muted);font-size:.85rem;">Loading…</p>
     </div>
   </div>
 
