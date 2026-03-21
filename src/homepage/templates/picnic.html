@@ -66,6 +66,40 @@
   .badge-due { background: rgba(239,68,68,.15); color: #ef4444; }
   .badge-ok { background: rgba(16,185,129,.15); color: #10b981; }
 
+  .cuisine-group { margin-bottom: 32px; }
+  .cuisine-title {
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .recipe-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .recipe-card:hover { border-color: var(--accent); }
+  .recipe-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .recipe-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .recipe-servings { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+  .recipe-notes { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+  .recipe-progress { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .progress-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; transition:width .3s; }
+  .progress-label { font-family:var(--mono); font-size:0.68rem; color:var(--muted); white-space:nowrap; }
+  .ing-list { list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:6px; }
+  .ing-item { font-size:0.75rem; padding:3px 8px; border-radius:20px; border:1px solid var(--border); }
+  .ing-known { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.3); color:#10b981; }
+  .ing-unknown { background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.3); color:#ef4444; }
+  .ing-product { color:var(--muted); font-size:0.68rem; }
+
   .meal-week { margin-bottom: 16px; }
   .meal-date {
     display: block;
@@ -122,6 +156,18 @@
         <span class="picnic-label">⏳ loading</span>
         <span class="picnic-val">…</span>
       </div>
+    </div>
+  </div>
+
+  <!-- RECIPES -->
+  <p class="section-label">// recepten ({{ recipes_count }} opgeslagen)</p>
+  <div class="picnic-card">
+    <div
+      hx-get="/api/picnic/recipes"
+      hx-trigger="load"
+      hx-swap="innerHTML"
+    >
+      <p style="color:var(--muted);font-size:.85rem;">Loading…</p>
     </div>
   </div>
 

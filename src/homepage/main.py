@@ -192,9 +192,18 @@ async def github_page(request: Request):
 
 @app.get("/picnic")
 async def picnic_page(request: Request):
+    import sqlite3
+    from pathlib import Path
+    try:
+        conn = sqlite3.connect(Path.home() / ".openclaw/picnic/staples.db")
+        recipes_count = conn.execute("SELECT COUNT(*) FROM recipes WHERE active=1").fetchone()[0]
+        conn.close()
+    except Exception:
+        recipes_count = 0
     return templates.TemplateResponse("picnic.html", {
         "request": request,
         "active": "picnic",
+        "recipes_count": recipes_count,
     })
 
 
@@ -249,6 +258,69 @@ async def picnic_status():
 <div class="picnic-stat"><span class="picnic-label">staples due</span><span class="picnic-val" style="color:{due_color}">{due_count} / {total_staples}</span></div>
 <div class="picnic-stat"><span class="picnic-label">pending feedback</span><span class="picnic-val">{feedback_count}</span></div>
 """
+    return HTMLResponse(html)
+
+
+@app.get("/api/picnic/recipes")
+async def picnic_recipes():
+    """htmx fragment: full recipe list with ingredients."""
+    import json
+    import sqlite3
+    from pathlib import Path
+
+    db_path = Path.home() / ".openclaw/picnic/staples.db"
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+
+    recipes = conn.execute("SELECT * FROM recipes WHERE active=1 ORDER BY cuisine, name").fetchall()
+
+    if not recipes:
+        conn.close()
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;">No recipes yet.</p>')
+
+    # Group by cuisine
+    from collections import defaultdict
+    by_cuisine = defaultdict(list)
+    for r in recipes:
+        r = dict(r)
+        ings = conn.execute(
+            "SELECT * FROM recipe_ingredients WHERE recipe_id=? ORDER BY id", (r["id"],)
+        ).fetchall()
+        r["ingredients"] = [dict(i) for i in ings]
+        by_cuisine[r["cuisine"] or "Overig"].append(r)
+    conn.close()
+
+    html = ""
+    for cuisine, rlist in sorted(by_cuisine.items()):
+        html += f'<div class="cuisine-group"><h3 class="cuisine-title">{cuisine}</h3>'
+        for r in rlist:
+            known = sum(1 for i in r["ingredients"] if i.get("preferred_product_id"))
+            total = len(r["ingredients"])
+            pct = int(known / total * 100) if total else 0
+            bar_color = "#10b981" if pct == 100 else "#f59e0b" if pct >= 50 else "#ef4444"
+            ing_list = "".join(
+                f'<li class="ing-item {"ing-known" if i.get("preferred_product_id") else "ing-unknown"}">'
+                f'{"✓" if i.get("preferred_product_id") else "?"} {i["ingredient_name"]}'
+                f'{f" <span class=\\"ing-product\\">{i[\"preferred_product_name\"]}</span>" if i.get("preferred_product_name") else ""}'
+                f'</li>'
+                for i in r["ingredients"]
+            )
+            html += f"""<div class="recipe-card">
+  <div class="recipe-head">
+    <span class="recipe-name">{r["name"]}</span>
+    <span class="recipe-servings">{r["servings"]}p</span>
+  </div>
+  <div class="recipe-notes">{r["notes"] or ""}</div>
+  <div class="recipe-progress">
+    <div class="progress-bar">
+      <div class="progress-fill" style="width:{pct}%;background:{bar_color}"></div>
+    </div>
+    <span class="progress-label">{known}/{total} producten bekend</span>
+  </div>
+  <ul class="ing-list">{ing_list}</ul>
+</div>"""
+        html += '</div>'
+
     return HTMLResponse(html)
 
 
