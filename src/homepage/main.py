@@ -298,13 +298,13 @@ async def picnic_recipes():
             total = len(r["ingredients"])
             pct = int(known / total * 100) if total else 0
             bar_color = "#10b981" if pct == 100 else "#f59e0b" if pct >= 50 else "#ef4444"
-            ing_list = "".join(
-                f'<li class="ing-item {"ing-known" if i.get("preferred_product_id") else "ing-unknown"}">'
-                f'{"✓" if i.get("preferred_product_id") else "?"} {i["ingredient_name"]}'
-                f'{f" <span class=\\"ing-product\\">{i[\"preferred_product_name\"]}</span>" if i.get("preferred_product_name") else ""}'
-                f'</li>'
-                for i in r["ingredients"]
-            )
+            def _ing_html(i):
+                known = bool(i.get("preferred_product_id"))
+                cls = "ing-known" if known else "ing-unknown"
+                icon = "✓" if known else "?"
+                product = f' <span class="ing-product">{i["preferred_product_name"]}</span>' if i.get("preferred_product_name") else ""
+                return f'<li class="ing-item {cls}">{icon} {i["ingredient_name"]}{product}</li>'
+            ing_list = "".join(_ing_html(i) for i in r["ingredients"])
             html += f"""<div class="recipe-card">
   <div class="recipe-head">
     <span class="recipe-name">{r["name"]}</span>
