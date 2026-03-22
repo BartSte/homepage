@@ -179,6 +179,11 @@ def get_personal_records() -> dict:
             continue
 
         if section in ("cycling", "running"):
+            # A level-2 heading (** ...) means a new sub-section — reset distance context
+            if re.match(r"\*\* ", stripped):
+                current_dist = None
+                i += 1
+                continue
             dm = re.match(r"\*\*\* ([\d.]+) km", stripped)
             if dm:
                 current_dist = {"distance": float(dm.group(1)), "entries": []}
@@ -186,6 +191,7 @@ def get_personal_records() -> dict:
                 target.append(current_dist)
                 i += 1
                 continue
+            # Only attach tables when we're inside a km-distance block
             if stripped.startswith("|") and current_dist is not None:
                 table_lines = []
                 while i < len(lines) and lines[i].strip().startswith("|"):
