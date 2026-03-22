@@ -24,8 +24,7 @@ async def index(request: Request):
     # Quick stats for the landing page
     activities = parser.get_activities()
     latest_week = activities["weeks"][0] if activities["weeks"] else None
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "active": "home",
         "latest_week": latest_week,
     })
@@ -56,8 +55,7 @@ async def activities_page(request: Request):
 
     max_intensity = max((w["intensity"] for w in data["weeks"]), default=1)
 
-    return templates.TemplateResponse("activities.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "activities.html", {
         "active": "activities",
         "data": data,
         "total_km": f"{total_km:.0f}",
@@ -73,8 +71,7 @@ async def activities_page(request: Request):
 async def koms_page(request: Request):
     records = parser.get_personal_records()
     kom_count = sum(1 for s in records["segment_koms"] if s["is_kom"])
-    return templates.TemplateResponse("koms.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "koms.html", {
         "active": "koms",
         "records": records,
         "kom_count": kom_count,
@@ -97,8 +94,7 @@ async def calendar_page(request: Request):
             current_week = []
     if current_week:
         weeks.append(current_week)
-    return templates.TemplateResponse("calendar.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "calendar.html", {
         "active": "calendar",
         "days": days,
         "weeks": weeks,
@@ -180,8 +176,7 @@ async def github_page(request: Request):
     repos = github.get_repos()
     open_prs = github.get_open_prs()
     commits = github.get_recent_commits()
-    return templates.TemplateResponse("github.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "github.html", {
         "active": "github",
         "repos": repos,
         "open_prs": open_prs,
@@ -201,8 +196,7 @@ async def picnic_page(request: Request):
         conn.close()
     except Exception:
         recipes_count = 0
-    return templates.TemplateResponse("picnic.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "picnic.html", {
         "active": "picnic",
         "recipes_count": recipes_count,
     })
