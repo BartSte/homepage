@@ -230,6 +230,48 @@
   }
   .cmd-hint .kw { color: var(--accent); }
 
+  /* ── last order ── */
+  .last-order-date {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 16px;
+  }
+  .last-order-meal {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(42,42,64,.4);
+  }
+  .last-order-meal:last-child { border-bottom: none; margin-bottom: 0; }
+  .last-order-meal-head {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .last-order-ings {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .last-order-ing {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    padding: 3px 0;
+  }
+  .last-order-ing.known .ing-name   { color: var(--text); min-width: 160px; }
+  .last-order-ing.unknown .ing-name { color: var(--muted); min-width: 160px; }
+  .ing-arrow { color: var(--accent); font-size: 0.75rem; flex-shrink: 0; }
+  .ing-arrow.muted { color: var(--muted); font-style: italic; font-size: 0.72rem; }
+  .ing-product-name { color: var(--muted); font-size: 0.78rem; }
+
   /* ── htmx loading indicator ── */
   .htmx-indicator { opacity:0; transition:opacity .2s; }
   .htmx-request .htmx-indicator { opacity:1; }
@@ -271,6 +313,17 @@
     <div id="recipe-list"
       hx-get="/api/picnic/recipes"
       hx-trigger="load, recipesUpdated from:body"
+      hx-swap="innerHTML">
+      <p style="color:var(--muted);font-size:.85rem;">Laden…</p>
+    </div>
+  </div>
+
+  <!-- LAST ORDER: MEALS + INGREDIENTS -->
+  <p class="section-label">// laatste bestelling — maaltijden &amp; ingrediënten</p>
+  <div class="picnic-card">
+    <div
+      hx-get="/api/picnic/last-order"
+      hx-trigger="load"
       hx-swap="innerHTML">
       <p style="color:var(--muted);font-size:.85rem;">Laden…</p>
     </div>

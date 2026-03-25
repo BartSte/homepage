@@ -416,6 +416,88 @@ async def picnic_meals():
     return HTMLResponse("".join(html_parts))
 
 
+# ── Last order (meals + ingredients) ─────────────────────────────────────────
+
+@router.get("/api/picnic/last-order")
+async def picnic_last_order():
+    """htmx: last order's meals with full ingredient + product mapping."""
+    conn = _db()
+    # Find most recent order date
+    row = conn.execute("SELECT MAX(order_date) FROM meals").fetchone()
+    if not row or not row[0]:
+        conn.close()
+        return HTMLResponse('<p style="color:var(--muted);font-size:.85rem;">Nog geen bestellingen.</p>')
+
+    last_date = row[0]
+    meals = conn.execute(
+        "SELECT * FROM meals WHERE order_date=? ORDER BY id", (last_date,)
+    ).fetchall()
+
+    html_parts = [f'<div class="last-order-date">📅 besteld op {_e(last_date)}</div>']
+
+    for meal in meals:
+        m = dict(meal)
+        # Look up recipe + ingredients by name
+        recipe = conn.execute(
+            "SELECT * FROM recipes WHERE LOWER(name)=LOWER(?)", (m["name"],)
+        ).fetchone()
+
+        cuisine_tag = (f'<span class="meal-cuisine">{_e(m["cuisine"])}</span>'
+                       if m.get("cuisine") else "")
+        html_parts.append(f'<div class="last-order-meal">')
+        html_parts.append(f'<div class="last-order-meal-head">🍽 {_e(m["name"])} {cuisine_tag}</div>')
+
+        if recipe:
+            ings = conn.execute(
+                "SELECT * FROM recipe_ingredients WHERE recipe_id=? ORDER BY id",
+                (recipe["id"],)
+            ).fetchall()
+            html_parts.append('<ul class="last-order-ings">')
+            for i in ings:
+                i = dict(i)
+                # Strip leading quantity prefix for display
+                import re
+                name = re.sub(
+                    r'^[\d\s.,/]+\s*(?:gram|g|kg|ml|liter|l|stuk|stuks|eetl|tl|cup|tbsp|tsp|oz|lb|'
+                    r'x|pak|bos|teen|teentje|middelgrote|grote|kleine|blikje|blik|bus|plak|'
+                    r'container|head|medium|large|small|tablespoon|teaspoon|theelepel|eetlepel|'
+                    r'clove|cloves|fruit|whole|chopped|frozen|cooked|canned|fresh|dry|juiced|'
+                    r'unpeeled|peeled)[^,]*,\s*',
+                    '', i["ingredient_name"], flags=re.IGNORECASE
+                ).strip()
+                if i.get("preferred_product_name"):
+                    html_parts.append(
+                        f'<li class="last-order-ing known">'
+                        f'<span class="ing-name">{_e(name)}</span>'
+                        f'<span class="ing-arrow">→</span>'
+                        f'<span class="ing-product-name">{_e(i["preferred_product_name"])}</span>'
+                        f'</li>'
+                    )
+                else:
+                    html_parts.append(
+                        f'<li class="last-order-ing unknown">'
+                        f'<span class="ing-name">{_e(name)}</span>'
+                        f'<span class="ing-arrow muted">pantry</span>'
+                        f'</li>'
+                    )
+            html_parts.append('</ul>')
+        else:
+            # Fallback: show stored ingredients_json
+            try:
+                ings = json.loads(m.get("ingredients_json") or "[]")
+                html_parts.append('<ul class="last-order-ings">')
+                for ing in ings:
+                    html_parts.append(f'<li class="last-order-ing known"><span class="ing-name">{_e(ing)}</span></li>')
+                html_parts.append('</ul>')
+            except Exception:
+                pass
+
+        html_parts.append('</div>')
+
+    conn.close()
+    return HTMLResponse("".join(html_parts))
+
+
 # ── Staples ───────────────────────────────────────────────────────────────────
 
 @router.get("/api/picnic/staples")
