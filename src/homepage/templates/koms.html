@@ -261,7 +261,7 @@
           <table class="data-table">
             <thead><tr><th>Rank</th><th>Time</th><th>Speed</th><th>Date</th></tr></thead>
             <tbody>
-            {% for e in dist.entries[:5] %}
+            {% for e in dist.entries %}
             {% set r = e.get('Rank','') | int %}
             <tr>
               <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
@@ -302,7 +302,7 @@
           <table class="data-table">
             <thead><tr><th>Rank</th><th>Avg power</th><th>Date</th></tr></thead>
             <tbody>
-            {% for e in block.entries[:5] %}
+            {% for e in block.entries %}
             {% set r = e.get('Rank','') | int %}
             <tr>
               <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
@@ -342,7 +342,7 @@
           <table class="data-table">
             <thead><tr><th>Rank</th><th>Time</th><th>Speed</th><th>Date</th></tr></thead>
             <tbody>
-            {% for e in dist.entries[:5] %}
+            {% for e in dist.entries %}
             {% set r = e.get('Rank','') | int %}
             <tr>
               <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
