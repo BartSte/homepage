@@ -151,10 +151,12 @@ def get_personal_records() -> dict:
     text = RECORDS_PATH.read_text()
     lines = text.splitlines()
 
-    result: dict = {"cycling_prs": [], "running_prs": [], "segment_koms": []}
+    result: dict = {"cycling_prs": [], "running_prs": [], "cycling_power_prs": [], "segment_koms": []}
 
     section: str | None = None
+    subsection: str | None = None  # "time" or "power"
     current_dist: dict | None = None
+    current_power: dict | None = None
     current_seg: dict | None = None
     i = 0
 
@@ -164,10 +166,12 @@ def get_personal_records() -> dict:
 
         if stripped == "* Cycling PRs":
             section = "cycling"
+            subsection = None
             i += 1
             continue
         elif stripped == "* Running PRs":
             section = "running"
+            subsection = None
             i += 1
             continue
         elif stripped == "* Segment KOMs":
@@ -175,33 +179,58 @@ def get_personal_records() -> dict:
                 result["segment_koms"].append(current_seg)
                 current_seg = None
             section = "koms"
+            subsection = None
             i += 1
             continue
 
         if section in ("cycling", "running"):
-            # A level-2 heading (** ...) means a new sub-section — reset distance context
+            # Level-2 heading — determine subsection
             if re.match(r"\*\* ", stripped):
                 current_dist = None
+                current_power = None
+                if "Max average power" in stripped:
+                    subsection = "power"
+                else:
+                    subsection = "time"
                 i += 1
                 continue
-            dm = re.match(r"\*\*\* ([\d.]+) km", stripped)
-            if dm:
-                current_dist = {"distance": float(dm.group(1)), "entries": []}
-                target = result["cycling_prs"] if section == "cycling" else result["running_prs"]
-                target.append(current_dist)
-                i += 1
-                continue
-            # Only attach tables when we're inside a km-distance block
-            if stripped.startswith("|") and current_dist is not None:
-                table_lines = []
-                while i < len(lines) and lines[i].strip().startswith("|"):
-                    table_lines.append(lines[i])
+
+            if subsection == "power" and section == "cycling":
+                pm = re.match(r"\*\*\* ([\d.]+ min)", stripped)
+                if pm:
+                    current_power = {"duration": pm.group(1), "entries": []}
+                    result["cycling_power_prs"].append(current_power)
                     i += 1
-                current_dist["entries"] = [
-                    e for e in _parse_org_table(table_lines)
-                    if e.get("Rank", "").strip() not in ("Rank", "")
-                ]
-                continue
+                    continue
+                if stripped.startswith("|") and current_power is not None:
+                    table_lines = []
+                    while i < len(lines) and lines[i].strip().startswith("|"):
+                        table_lines.append(lines[i])
+                        i += 1
+                    current_power["entries"] = [
+                        e for e in _parse_org_table(table_lines)
+                        if e.get("Rank", "").strip() not in ("Rank", "")
+                    ]
+                    continue
+            else:
+                dm = re.match(r"\*\*\* ([\d.]+) km", stripped)
+                if dm:
+                    current_dist = {"distance": float(dm.group(1)), "entries": []}
+                    target = result["cycling_prs"] if section == "cycling" else result["running_prs"]
+                    target.append(current_dist)
+                    i += 1
+                    continue
+                # Only attach tables when we're inside a km-distance block
+                if stripped.startswith("|") and current_dist is not None:
+                    table_lines = []
+                    while i < len(lines) and lines[i].strip().startswith("|"):
+                        table_lines.append(lines[i])
+                        i += 1
+                    current_dist["entries"] = [
+                        e for e in _parse_org_table(table_lines)
+                        if e.get("Rank", "").strip() not in ("Rank", "")
+                    ]
+                    continue
 
         elif section == "koms":
             sm = re.match(r"\*\* (SEG-.+)", stripped)

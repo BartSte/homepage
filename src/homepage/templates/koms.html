@@ -202,6 +202,9 @@
     <button class="tab-btn active" id="btn-koms" onclick="switchTab('koms')">👑 Segment KOMs ({{ records.segment_koms | length }})</button>
     <button class="tab-btn" id="btn-cycling" onclick="switchTab('cycling')">🚴 Cycling PRs</button>
     <button class="tab-btn" id="btn-running" onclick="switchTab('running')">🏃 Running PRs</button>
+    {% if records.cycling_power_prs %}
+    <button class="tab-btn" id="btn-power" onclick="switchTab('power')">⚡ Power PRs</button>
+    {% endif %}
   </div>
 
   <!-- KOM SEGMENTS PANE -->
@@ -280,6 +283,47 @@
       {% endfor %}
     </div>
   </div>
+
+  <!-- POWER PRs PANE -->
+  {% if records.cycling_power_prs %}
+  <div class="tab-pane" id="pane-power">
+    <div class="distances-grid">
+      {% for block in records.cycling_power_prs %}
+      <div class="dist-card">
+        <div class="dist-header">
+          <span class="dist-km">⚡ {{ block.duration }}</span>
+          {% if block.entries %}
+          <span class="dist-pr">{{ block.entries[0].get('Avg power','') }}</span>
+          {% endif %}
+        </div>
+        <div class="dist-body">
+          {% if block.entries %}
+          <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Rank</th><th>Avg power</th><th>Date</th></tr></thead>
+            <tbody>
+            {% for e in block.entries[:5] %}
+            {% set r = e.get('Rank','') | int %}
+            <tr>
+              <td class="{% if r==1 %}rank-1{% elif r==2 %}rank-2{% elif r==3 %}rank-3{% endif %}">
+                {% if r==1 %}🥇{% elif r==2 %}🥈{% elif r==3 %}🥉{% else %}{{ r }}{% endif %}
+              </td>
+              <td style="font-family:var(--mono);font-weight:600;">{{ e.get('Avg power','') }}</td>
+              <td style="font-family:var(--mono);color:var(--muted);font-size:0.78rem;">{{ e.get('Date','') }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          </div>
+          {% else %}
+          <p style="padding:12px 16px;color:var(--muted);font-size:0.82rem;">No results yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
   <!-- RUNNING PRs PANE -->
   <div class="tab-pane" id="pane-running">
