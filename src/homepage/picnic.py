@@ -495,9 +495,12 @@ async def picnic_staples():
     for s in staples:
         badge = ('<span class="badge badge-due">due</span>' if s.get("is_due")
                  else '<span class="badge badge-ok">ok</span>')
+        qty = s.get("default_quantity") or 1
+        qty_html = f'<span style="font-family:var(--mono);font-size:.8rem;color:var(--accent)">×{qty}</span>' if qty > 1 else "—"
         rows += f"""<tr>
   <td>{_e(s['name'])}</td>
   <td>{badge}</td>
+  <td style="text-align:center">{qty_html}</td>
   <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{_e(s.get('last_ordered_date') or '—')}</td>
   <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{_e(s.get('next_due') or '—')}</td>
   <td style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{_e(s.get('reorder_interval_days', '?'))}d</td>
@@ -505,7 +508,7 @@ async def picnic_staples():
 
     return HTMLResponse(f"""<table class="staples-table">
   <thead><tr>
-    <th>item</th><th>status</th><th>laatste bestelling</th><th>volgende</th><th>interval</th>
+    <th>item</th><th>status</th><th>qty</th><th>laatste bestelling</th><th>volgende</th><th>interval</th>
   </tr></thead>
   <tbody>{rows}</tbody>
 </table>""")
