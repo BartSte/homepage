@@ -185,32 +185,13 @@ async def picnic_status():
     if not data.get("ok"):
         return HTMLResponse(f'<p style="color:var(--red);font-size:.85rem;">{_e(data.get("error","?"))}</p>')
 
-    from datetime import date
-    today = data.get("today", "")
-    next_order = data.get("next_order_date")
-    last_delivery = data.get("last_delivery_date", "—")
     due_count = len(data.get("staples_due", []))
     total_staples = data.get("total_staples", 0)
     feedback_count = data.get("unapplied_feedback", 0)
 
-    if next_order:
-        today_dt = date.fromisoformat(today)
-        next_dt = date.fromisoformat(next_order)
-        delta = (next_dt - today_dt).days
-        if delta < 0:
-            schedule_html = f'<span style="color:var(--red)">⚠ {abs(delta)} dagen te laat</span>'
-        elif delta == 0:
-            schedule_html = '<span style="color:var(--accent)">📦 bestelling vandaag</span>'
-        else:
-            schedule_html = f'<span style="color:var(--green)">✓ volgende bestelling over {delta} dagen ({next_order})</span>'
-    else:
-        schedule_html = '<span style="color:var(--muted)">nog niet gepland</span>'
-
     due_color = "var(--red)" if due_count > 0 else "var(--green)"
 
     return HTMLResponse(f"""
-<div class="picnic-stat"><span class="picnic-label">schema</span><span class="picnic-val">{schedule_html}</span></div>
-<div class="picnic-stat"><span class="picnic-label">laatste levering</span><span class="picnic-val">{_e(last_delivery or "—")}</span></div>
 <div class="picnic-stat"><span class="picnic-label">staples te bestellen</span><span class="picnic-val" style="color:{due_color}">{due_count} / {total_staples}</span></div>
 <div class="picnic-stat"><span class="picnic-label">onverwerkte feedback</span><span class="picnic-val">{feedback_count}</span></div>
 """)
