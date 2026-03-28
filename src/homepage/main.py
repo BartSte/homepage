@@ -188,6 +188,13 @@ async def github_page(request: Request):
 
 @app.get("/picnic")
 async def picnic_page(request: Request):
+    return templates.TemplateResponse(request, "picnic.html", {
+        "active": "picnic",
+    })
+
+
+@app.get("/recipes")
+async def recipes_page(request: Request):
     import sqlite3
     from pathlib import Path
     try:
@@ -196,8 +203,8 @@ async def picnic_page(request: Request):
         conn.close()
     except Exception:
         recipes_count = 0
-    return templates.TemplateResponse(request, "picnic.html", {
-        "active": "picnic",
+    return templates.TemplateResponse(request, "recipes.html", {
+        "active": "recipes",
         "recipes_count": recipes_count,
     })
 

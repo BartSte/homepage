@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Hekkie — Recepten{% endblock %}
+
+{% block extra_style %}
+  .recipes-header { margin-bottom: 40px; }
+  .recipes-header h2 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .recipes-header p { color: var(--muted); font-size: 0.95rem; }
+
+  .recipes-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* ── section header ── */
+  .section-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-row .section-label { margin-bottom: 0; }
+
+  /* ── cuisine groups ── */
+  .cuisine-group { margin-bottom: 32px; }
+  .cuisine-title {
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── recipe card (view) ── */
+  .recipe-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .recipe-card:hover { border-color: rgba(197,26,138,.4); }
+  .recipe-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .recipe-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+  .recipe-servings { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+  .recipe-notes { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+  .recipe-progress { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .progress-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; transition:width .3s; }
+  .progress-label { font-family:var(--mono); font-size:0.68rem; color:var(--muted); white-space:nowrap; }
+  .ing-list { list-style:none; padding:0; margin:0; display:flex; flex-wrap:wrap; gap:6px; }
+  .ing-item { font-size:0.75rem; padding:3px 8px; border-radius:20px; border:1px solid var(--border); }
+  .ing-known   { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.3); color:#10b981; }
+  .ing-unknown { background:rgba(239,68,68,.08);  border-color:rgba(239,68,68,.3);  color:#ef4444; }
+  .ing-product { color:var(--muted); font-size:0.68rem; }
+
+  /* ── recipe card (edit) ── */
+  .recipe-editing { border-color: var(--accent) !important; }
+  .edit-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .edit-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color .15s;
+    flex: 1;
+    min-width: 80px;
+  }
+  .edit-field:focus { border-color: var(--accent); }
+  .edit-name    { flex: 2; min-width: 140px; }
+  .edit-cuisine { flex: 1; min-width: 100px; }
+  .edit-servings{ flex: 0 0 60px; min-width: 0; }
+  .edit-notes   { width: 100%; margin-bottom: 12px; }
+  .edit-actions { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+
+  /* ── ingredient edit rows ── */
+  .ing-edit-section {
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+  .ing-edit-header {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .ing-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(42,42,64,.3);
+    font-size: 0.8rem;
+  }
+  .ing-edit-row:last-of-type { border-bottom: none; }
+  .ing-edit-name    { flex: 2; color: var(--text); }
+  .ing-edit-qty     { flex: 1; font-family:var(--mono); font-size:0.72rem; color:var(--muted); }
+  .ing-edit-product { flex: 2; font-size:0.72rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ing-add-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* ── buttons ── */
+  .btn-sm {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-save   { background:rgba(16,185,129,.15); border-color:#10b981; color:#10b981; }
+  .btn-save:hover { background:rgba(16,185,129,.3); }
+  .btn-danger { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#ef4444; }
+  .btn-danger:hover { background:rgba(239,68,68,.25); }
+  .btn-add    { background:rgba(197,26,138,.1); border-color:rgba(197,26,138,.3); color:var(--accent); }
+  .btn-add:hover { background:rgba(197,26,138,.2); }
+  .btn-cancel { color:var(--muted); }
+{% endblock %}
+
+{% block content %}
+  <div class="recipes-header">
+    <h2>📖 Recepten</h2>
+    <p>{{ recipes_count }} opgeslagen recepten — bekijk, bewerk, of voeg toe.</p>
+  </div>
+
+  <div class="section-row">
+    <p class="section-label">// alle recepten</p>
+    <button class="btn-sm btn-add"
+      hx-get="/api/picnic/recipes/new"
+      hx-target="#new-recipe-slot"
+      hx-swap="innerHTML">+ nieuw recept</button>
+  </div>
+
+  <div class="recipes-card">
+    <!-- slot for new recipe form -->
+    <div id="new-recipe-slot"></div>
+
+    <!-- recipe list -->
+    <div id="recipe-list"
+      hx-get="/api/picnic/recipes"
+      hx-trigger="load, recipesUpdated from:body"
+      hx-swap="innerHTML">
+      <p style="color:var(--muted);font-size:.85rem;">Laden…</p>
+    </div>
+  </div>
+{% endblock %}

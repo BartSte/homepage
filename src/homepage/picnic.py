@@ -423,7 +423,7 @@ async def picnic_last_order():
             "SELECT * FROM recipes WHERE LOWER(name)=LOWER(?)", (m["name"],)
         ).fetchone()
 
-        cuisine_tag = (f'<span class="meal-cuisine">{_e(m["cuisine"])}</span>'
+        cuisine_tag = (f'<span class="meal-cuisine-tag">{_e(m["cuisine"])}</span>'
                        if m.get("cuisine") else "")
         html_parts.append(f'<div class="last-order-meal">')
         html_parts.append(f'<div class="last-order-meal-head">🍽 {_e(m["name"])} {cuisine_tag}</div>')
@@ -436,20 +436,18 @@ async def picnic_last_order():
             html_parts.append('<ul class="last-order-ings">')
             for i in ings:
                 i = dict(i)
-                # Strip leading quantity prefix for display
-                import re
-                name = re.sub(
-                    r'^[\d\s.,/]+\s*(?:gram|g|kg|ml|liter|l|stuk|stuks|eetl|tl|cup|tbsp|tsp|oz|lb|'
-                    r'x|pak|bos|teen|teentje|middelgrote|grote|kleine|blikje|blik|bus|plak|'
-                    r'container|head|medium|large|small|tablespoon|teaspoon|theelepel|eetlepel|'
-                    r'clove|cloves|fruit|whole|chopped|frozen|cooked|canned|fresh|dry|juiced|'
-                    r'unpeeled|peeled)[^,]*,\s*',
-                    '', i["ingredient_name"], flags=re.IGNORECASE
-                ).strip()
+                name = _e(i["ingredient_name"])
+                qty = i.get("quantity")
+                unit = i.get("unit") or ""
+                qty_html = ""
+                if qty is not None:
+                    qty_str = str(int(qty)) if qty == int(qty) else str(qty)
+                    qty_html = f'<span class="ing-qty">{_e(qty_str)} {_e(unit)}</span>'
                 if i.get("preferred_product_name"):
                     html_parts.append(
                         f'<li class="last-order-ing known">'
-                        f'<span class="ing-name">{_e(name)}</span>'
+                        f'<span class="ing-name">{name}</span>'
+                        f'{qty_html}'
                         f'<span class="ing-arrow">→</span>'
                         f'<span class="ing-product-name">{_e(i["preferred_product_name"])}</span>'
                         f'</li>'
@@ -457,7 +455,8 @@ async def picnic_last_order():
                 else:
                     html_parts.append(
                         f'<li class="last-order-ing unknown">'
-                        f'<span class="ing-name">{_e(name)}</span>'
+                        f'<span class="ing-name">{name}</span>'
+                        f'{qty_html}'
                         f'<span class="ing-arrow muted">pantry</span>'
                         f'</li>'
                     )
