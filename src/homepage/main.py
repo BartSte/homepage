@@ -37,7 +37,6 @@ async def activities_page(request: Request):
     data = parser.get_activities()
     # Compute YTD totals
     total_km = sum(w["total_km"] for w in data["weeks"])
-    total_intensity = sum(w["intensity"] for w in data["weeks"])
     # Parse HH:MM:SS durations and sum seconds
     total_seconds = 0
     for w in data["weeks"]:
@@ -53,15 +52,11 @@ async def activities_page(request: Request):
     total_hours = total_seconds // 3600
     total_minutes = (total_seconds % 3600) // 60
 
-    max_intensity = max((w["intensity"] for w in data["weeks"]), default=1)
-
     return templates.TemplateResponse(request, "activities.html", {
         "active": "activities",
         "data": data,
         "total_km": f"{total_km:.0f}",
         "total_time": f"{total_hours}h {total_minutes}m",
-        "total_intensity": f"{total_intensity}",
-        "max_intensity": max_intensity,
     })
 
 
